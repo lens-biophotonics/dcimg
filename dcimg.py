@@ -1,4 +1,5 @@
 import mmap
+import numpy as np
 
 
 class DcimgFile(object):
@@ -18,6 +19,8 @@ class DcimgFile(object):
         self.y_size = None
         self.bytes_per_row = None
         self.bytes_per_img = None
+        self.npa = None  #: memory-mapped numpy array
+        self.dtype = None
 
     def open(self, file_name=None):
         if file_name is None:
@@ -30,11 +33,14 @@ class DcimgFile(object):
 
         self.mm = mm
         self._parse_header()
+        self.npa = np.ndarray((self.x_size, self.y_size), self.dtype, self.mm,
+                              offset=232)
 
     def close(self):
         if self.mm is not None:
             self.mm.close()
         self.mm = None
+        self.npa = None
 
     def _parse_header(self):
         bytes_to_skip = 4 * int.from_bytes(self.mm[8:12], byteorder="little")
@@ -54,6 +60,14 @@ class DcimgFile(object):
         index = 156
         self.byte_depth = int.from_bytes(self.mm[index:index + 4],
                                          byteorder="little")
+
+        if self.byte_depth == 1:
+            self.dtype = np.uint8
+        elif self.byte_depth == 2:
+            self.dtype = np.uint16
+        else:
+            raise RuntimeError(
+                "Invalid byte-depth: {}".format(self.byte_depth))
 
         index = 164
         self.x_size = int.from_bytes(self.mm[index:index + 4],
