@@ -35,6 +35,11 @@ class DcimgFile(object):
         self.mm = mm
         self._parse_header()
 
+
+    @property
+    def shape(self):
+        return (self.nfrms, self.x_size, self.y_size)
+
     def close(self):
         if self.mm is not None:
             self.mm.close()
@@ -109,7 +114,7 @@ class DcimgFile(object):
         A numpy array of the original type or of dtype, if specified.
         """
         offset = 232 + self.bytes_per_img * n_of_images * index
-        a = np.ndarray((self.x_size, self.y_size, n_of_images), self.dtype,
+        a = np.ndarray((n_of_images, self.x_size, self.y_size), self.dtype,
                        self.mm, offset)
         if dtype is None:
             return a
