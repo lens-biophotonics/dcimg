@@ -35,6 +35,7 @@ class DcimgFile(object):
         self.mm = mm
         self._parse_header()
 
+        self.npa = np.ndarray(self.shape, self.dtype, self.mm, 232)
 
     @property
     def shape(self):
