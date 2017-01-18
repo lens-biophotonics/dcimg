@@ -54,12 +54,8 @@ class DCIMGFile(object):
                                     byteorder="little")
 
         index = 48
-        self.file_size = int.from_bytes(self.mm[index:index + 4],
+        self.file_size = int.from_bytes(self.mm[index:index + 8],
                                         byteorder="little")
-
-        index = 120
-        self.footer_loc = int.from_bytes(self.mm[index:index + 4],
-                                         byteorder="little")
 
         index = 156
         self.byte_depth = int.from_bytes(self.mm[index:index + 4],
@@ -88,6 +84,13 @@ class DCIMGFile(object):
         index = 176
         self.bytes_per_img = int.from_bytes(self.mm[index:index + 4],
                                             byteorder="little")
+
+        index = 192
+        self.footer_loc = int.from_bytes(self.mm[index:index + 8],
+                                         byteorder="little")
+        index = 40
+        self.footer_loc += int.from_bytes(self.mm[index:index + 8],
+                                          byteorder="little")
 
         if self.bytes_per_row != self.byte_depth * self.ysize:
             e_str = "bytes_per_row ({bytes_per_row}) " \
