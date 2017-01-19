@@ -28,7 +28,7 @@ class DCIMGFile(object):
             file_name = self.file_name
 
         with open(file_name, 'r') as f:
-            mm = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+            mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
             if mm[:5] != b"DCIMG":
                 raise RuntimeError("Invalid DCIMG file")
 
@@ -144,6 +144,18 @@ class DCIMGFile(object):
         offset = 232 + self.bytes_per_img * frames_per_layer * index
         a = np.ndarray((frames_per_layer, self.ysize, self.xsize),
                        self.dtype, self.mm, offset)
+
+        # retrieve the first 4 pixels of each frame, which are stored in the
+        # file footer. Will overwrite [0000, FFFF, 0000, FFFF, 0000] at the
+        # beginning of the frame.
+        index = (self.footer_offset + 272
+                 + self.nfrms * (4 + 8)  # 4 for frame count, 8 for timestamp
+                 + 4 * self.byte_depth * index * frames_per_layer)
+        for i in range(0, frames_per_layer):
+            px = np.ndarray((1, 1, 4), self.dtype, self.mm, index)
+            a[i, 0, 0:4] = px
+            index += 4 * self.byte_depth
+
         if dtype is None:
             return a
         return a.astype(dtype)
