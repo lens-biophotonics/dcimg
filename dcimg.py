@@ -127,21 +127,22 @@ class DCIMGFile(object):
 
         return ts
 
-    def layer(self, index, frames_per_layer, dtype=None):
-        """Return a layer, i.e. a stack of images.
+    def layer(self, index, frames_per_layer=1, dtype=None):
+        """Return a layer, i.e. a stack of frames.
 
         Parameters
         ----------
         index : layer index
-        frames_per_layer : number of images per layer
+        frames_per_layer : number of frames per layer
         dtype
 
         Returns
         -------
-        A numpy array of the original type or of dtype, if specified.
+        A numpy array of the original type or of dtype, if specified. The
+        shape of the array is (nframes, ysize, xsize).
         """
         offset = 232 + self.bytes_per_img * frames_per_layer * index
-        a = np.ndarray((frames_per_layer, self.xsize, self.ysize),
+        a = np.ndarray((frames_per_layer, self.ysize, self.xsize),
                        self.dtype, self.mm, offset)
         if dtype is None:
             return a
