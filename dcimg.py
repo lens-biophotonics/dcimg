@@ -147,3 +147,20 @@ class DCIMGFile(object):
         if dtype is None:
             return a
         return a.astype(dtype)
+
+    def frame(self, index, dtype=None):
+        """Convenience function to retrieve a single layer.
+
+        Same as calling layer() with frames_per_layer=1.
+
+        Parameters
+        ----------
+        index : layer index
+        dtype
+
+        Returns
+        -------
+        A numpy array of the original type or of dtype, if specified. The
+        shape of the array is (ysize, xsize).
+        """
+        return np.squeeze(self.layer(index), dtype)
