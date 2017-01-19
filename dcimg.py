@@ -1,3 +1,9 @@
+# Based on:
+# https://github.com/StuartLittlefair/dcimg/blob/master/dcimg/Raw.py
+# hamamatsuOrcaTools: https://github.com/orlandi/hamamatsuOrcaTools
+# Python Microscopy: http://www.python-microscopy.org
+#                    https://bitbucket.org/david_baddeley/python-microscopy
+
 import mmap
 import numpy as np
 from math import pow, log10, floor
@@ -9,18 +15,30 @@ class DCIMGFile(object):
     After use, call the close() method to release resources properly.
     """
 
+    FILE_HDR_DTYPE = [
+        ('file_format', 'S8'),
+        ('format_version', '<u4'),  # 0x08
+        ('skip', '5<u4'),           # 0x0c
+        ('nsess', '<u4'),           # 0x20 ?
+        ('nfrms', '<u4'),           # 0x24
+        ('header_size', '<u4'),     # 0x28 ?
+        ('skip2', '<u4'),           # 0x2c
+        ('file_size', '<u8'),       # 0x30
+        ('skip3', '2<u4'),          # 0x38
+        ('file_size2', '<u8'),      # 0x40, repeated
+    ]
+
     def __init__(self, file_name=None):
         self.file_name = file_name
         self.mm = None  #: memory-mapped array
+        self.file_header = None
         self.file_size = None
         self.footer_offset = None
         self.byte_depth = None  #: number of bytes per pixel
         self.xsize = None
         self.ysize = None
-        self.nfrms = None  #: number of frames
         self.bytes_per_row = None
         self.bytes_per_img = None
-        self.npa = None  #: memory-mapped numpy array
         self.dtype = None
 
     def open(self, file_name=None):
@@ -30,12 +48,14 @@ class DCIMGFile(object):
         with open(file_name, 'r') as f:
             mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
             if mm[:5] != b"DCIMG":
-                raise RuntimeError("Invalid DCIMG file")
+                mm.close()
 
         self.mm = mm
         self._parse_header()
 
-        self.npa = np.ndarray(self.shape, self.dtype, self.mm, 232)
+    @property
+    def nfrms(self):
+        return self.file_header['nfrms']
 
     @property
     def shape(self):
@@ -49,18 +69,14 @@ class DCIMGFile(object):
         if self.mm is not None:
             self.mm.close()
         self.mm = None
-        self.npa = None
 
     def _parse_header(self):
-        bytes_to_skip = 4 * int.from_bytes(self.mm[8:12], byteorder="little")
+        self.file_header = np.zeros(1, dtype=self.FILE_HDR_DTYPE)
+        self.file_header = np.fromstring(self.mm[0:self.file_header.nbytes],
+                                         dtype=self.FILE_HDR_DTYPE)
 
-        index = 8 + bytes_to_skip
-        self.nfrms = int.from_bytes(self.mm[index:index + 4],
-                                    byteorder="little")
-
-        index = 48
-        self.file_size = int.from_bytes(self.mm[index:index + 8],
-                                        byteorder="little")
+        if not self.file_header['file_format'] == b'DCIMG':
+            raise RuntimeError('Invalid DCIMG file')
 
         index = 156
         self.byte_depth = int.from_bytes(self.mm[index:index + 4],
