@@ -28,17 +28,27 @@ class DCIMGFile(object):
         ('file_size2', '<u8'),      # 0x40, repeated
     ]
 
+    SESS_HDR_DTYPE = [
+        ('session_size', '<u8'),  # including footer
+        ('skip1', '6<u4'),
+        ('nfrms', '<u4'),
+        ('byte_depth', '<u4'),
+        ('skip2', '<u4'),
+        ('xsize', '<u4'),
+        ('bytes_per_row', '<u4'),
+        ('ysize', '<u4'),
+        ('bytes_per_img', '<u4'),
+        ('skip3', '2<u4'),
+        ('header_size', '1<u4'),
+        ('session_data_size', '<u8'),  # header_size + x*y*byte_depth*nfrms
+    ]
+
     def __init__(self, file_name=None):
         self.file_name = file_name
         self.mm = None  #: memory-mapped array
         self.file_header = None
+        self.sess_header = None
         self.file_size = None
-        self.footer_offset = None
-        self.byte_depth = None  #: number of bytes per pixel
-        self.xsize = None
-        self.ysize = None
-        self.bytes_per_row = None
-        self.bytes_per_img = None
         self.dtype = None
 
     def open(self, file_name=None):
@@ -55,15 +65,44 @@ class DCIMGFile(object):
 
     @property
     def nfrms(self):
-        return self.file_header['nfrms']
+        return self.sess_header['nfrms'][0]
+
+    @property
+    def byte_depth(self):
+        """Number of bytes per pixel."""
+        return self.sess_header['byte_depth'][0]
+
+    @property
+    def xsize(self):
+        return self.sess_header['xsize'][0]
+
+    @property
+    def ysize(self):
+        return self.sess_header['ysize'][0]
+
+    @property
+    def bytes_per_row(self):
+        return self.sess_header['bytes_per_row'][0]
+
+    @property
+    def bytes_per_img(self):
+        return self.sess_header['bytes_per_img'][0]
 
     @property
     def shape(self):
         return (self.nfrms, self.xsize, self.ysize)
 
     @property
+    def header_size(self):
+        return self.file_header['header_size'][0]
+
+    @property
+    def session_footer_offset(self):
+        return int(self.header_size + self.sess_header['session_data_size'][0])
+
+    @property
     def timestamp_offset(self):
-        return self.footer_offset + 272 + 4 * self.nfrms
+        return int(self.session_footer_offset + 272 + 4 * self.nfrms)
 
     def close(self):
         if self.mm is not None:
@@ -78,9 +117,11 @@ class DCIMGFile(object):
         if not self.file_header['file_format'] == b'DCIMG':
             raise RuntimeError('Invalid DCIMG file')
 
-        index = 156
-        self.byte_depth = int.from_bytes(self.mm[index:index + 4],
-                                         byteorder="little")
+        self.sess_header = np.zeros(1, dtype=self.SESS_HDR_DTYPE)
+        index_from = self.header_size
+        index_to = index_from + self.sess_header.nbytes
+        self.sess_header = np.fromstring(self.mm[index_from:index_to],
+                                         dtype=self.SESS_HDR_DTYPE)
 
         if self.byte_depth == 1:
             self.dtype = np.uint8
@@ -89,29 +130,6 @@ class DCIMGFile(object):
         else:
             raise RuntimeError(
                 "Invalid byte-depth: {}".format(self.byte_depth))
-
-        index = 164
-        self.xsize = int.from_bytes(self.mm[index:index + 4],
-                                    byteorder="little")
-
-        index = 168
-        self.bytes_per_row = int.from_bytes(self.mm[index:index + 4],
-                                            byteorder="little")
-
-        index = 172
-        self.ysize = int.from_bytes(self.mm[index:index + 4],
-                                    byteorder="little")
-
-        index = 176
-        self.bytes_per_img = int.from_bytes(self.mm[index:index + 4],
-                                            byteorder="little")
-
-        index = 192
-        self.footer_offset = int.from_bytes(self.mm[index:index + 8],
-                                            byteorder="little")
-        index = 40
-        self.footer_offset += int.from_bytes(self.mm[index:index + 8],
-                                             byteorder="little")
 
         if self.bytes_per_row != self.byte_depth * self.ysize:
             e_str = "bytes_per_row ({bytes_per_row}) " \
@@ -164,7 +182,7 @@ class DCIMGFile(object):
         # retrieve the first 4 pixels of each frame, which are stored in the
         # file footer. Will overwrite [0000, FFFF, 0000, FFFF, 0000] at the
         # beginning of the frame.
-        index = (self.footer_offset + 272
+        index = (self.session_footer_offset + 272
                  + self.nfrms * (4 + 8)  # 4 for frame count, 8 for timestamp
                  + 4 * self.byte_depth * index * frames_per_layer)
         for i in range(0, frames_per_layer):
