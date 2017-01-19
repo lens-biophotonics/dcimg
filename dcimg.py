@@ -1,5 +1,6 @@
 import mmap
 import numpy as np
+from math import pow, log10, floor
 
 
 class DCIMGFile(object):
@@ -12,7 +13,7 @@ class DCIMGFile(object):
         self.file_name = file_name
         self.mm = None  #: memory-mapped array
         self.file_size = None
-        self.footer_loc = None  #: footer offset
+        self.footer_offset = None
         self.byte_depth = None  #: number of bytes per pixel
         self.xsize = None
         self.ysize = None
@@ -39,6 +40,10 @@ class DCIMGFile(object):
     @property
     def shape(self):
         return (self.nfrms, self.xsize, self.ysize)
+
+    @property
+    def timestamp_offset(self):
+        return self.footer_offset + 272 + 4 * self.nfrms
 
     def close(self):
         if self.mm is not None:
@@ -86,11 +91,11 @@ class DCIMGFile(object):
                                             byteorder="little")
 
         index = 192
-        self.footer_loc = int.from_bytes(self.mm[index:index + 8],
-                                         byteorder="little")
+        self.footer_offset = int.from_bytes(self.mm[index:index + 8],
+                                            byteorder="little")
         index = 40
-        self.footer_loc += int.from_bytes(self.mm[index:index + 8],
-                                          byteorder="little")
+        self.footer_offset += int.from_bytes(self.mm[index:index + 8],
+                                             byteorder="little")
 
         if self.bytes_per_row != self.byte_depth * self.ysize:
             e_str = "bytes_per_row ({bytes_per_row}) " \
@@ -102,6 +107,25 @@ class DCIMGFile(object):
             e_str = "bytes per img ({bytes_per_img}) != nrows ({y_size}) * " \
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise RuntimeError(e_str)
+
+    @property
+    def timestamps(self):
+        """A numpy array with frame timestamps."""
+        ts = np.zeros(self.nfrms)
+        index = self.timestamp_offset
+        for i in range(0, self.nfrms):
+            whole = int.from_bytes(self.mm[index:index + 4], 'little')
+            index += 4
+
+            fraction = int.from_bytes(self.mm[index:index + 4], 'little')
+            index += 4
+
+            val = whole
+            if fraction != 0:
+                val += fraction * pow(10, -(floor(log10(fraction)) + 1))
+            ts[i] = val
+
+        return ts
 
     def layer(self, index, frames_per_layer, dtype=None):
         """Return a layer, i.e. a stack of images.
