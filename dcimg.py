@@ -197,6 +197,22 @@ class DCIMGFile(object):
             return a
         return a.astype(dtype)
 
+    def whole(self, dtype=None):
+        """Convenience function to retrieve the whole stack.
+
+        Equivalent to call layer() with index=0 and frames_per_layer=self.nfrms
+
+        Parameters
+        ----------
+        dtype
+
+        Returns
+        -------
+        A numpy array of the original type or of dtype, if specified. The
+        shape of the array is (self.nfrms, ysize, xsize).
+        """
+        return self.layer(0, self.nfrms, dtype)
+
     def frame(self, index, dtype=None):
         """Convenience function to retrieve a single layer.
 
