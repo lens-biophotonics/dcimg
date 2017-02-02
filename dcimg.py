@@ -60,11 +60,13 @@ class DCIMGFile(object):
 
         with open(file_name, 'r') as f:
             mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
-            if mm[:5] != b"DCIMG":
-                mm.close()
 
         self.mm = mm
-        self._parse_header()
+
+        try:
+            self._parse_header()
+        except RuntimeError:
+            self.close()
 
     @property
     def nfrms(self):
