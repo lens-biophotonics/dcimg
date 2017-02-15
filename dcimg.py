@@ -21,6 +21,7 @@ class DcimgFile(object):
         self.bytes_per_img = None
         self.npa = None  #: memory-mapped numpy array
         self.dtype = None
+        self.images_per_layer = 5
 
     def open(self, file_name=None):
         if file_name is None:
@@ -33,8 +34,6 @@ class DcimgFile(object):
 
         self.mm = mm
         self._parse_header()
-        self.npa = np.ndarray((self.x_size, self.y_size), self.dtype, self.mm,
-                              offset=232)
 
     def close(self):
         if self.mm is not None:
@@ -95,3 +94,23 @@ class DcimgFile(object):
             e_str = "bytes per img ({bytes_per_img}) != nrows ({y_size}) * " \
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise RuntimeError(e_str)
+
+    def layer(self, index, n_of_images, dtype=None):
+        """Return a layer, i.e. a stack of images.
+
+        Parameters
+        ----------
+        index : layer index
+        n_of_images : number of images per layer
+        dtype
+
+        Returns
+        -------
+        A numpy array of the original type or of dtype, if specified.
+        """
+        offset = 232 + self.bytes_per_img * n_of_images * index
+        a = np.ndarray((self.x_size, self.y_size, n_of_images), self.dtype,
+                       self.mm, offset)
+        if dtype is None:
+            return a
+        return a.astype(dtype)
