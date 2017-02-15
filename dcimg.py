@@ -167,7 +167,7 @@ class DCIMGFile(object):
         return ts
 
     def layer(self, index, frames_per_layer=1, dtype=None):
-        """Return a layer, i.e. a stack of frames.
+        """Return a layer, i.e a stack of frames.
 
         Parameters
         ----------
@@ -218,16 +218,17 @@ class DCIMGFile(object):
     def frame(self, index, dtype=None):
         """Convenience function to retrieve a single layer.
 
-        Same as calling layer() with frames_per_layer=1.
+        Same as calling :py:func:`layer` with `frames_per_layer`=1.
 
         Parameters
         ----------
-        index : layer index
+        index : int
+            layer index
         dtype
 
         Returns
         -------
-        A numpy array of the original type or of dtype, if specified. The
-        shape of the array is (ysize, xsize).
+        A numpy array of the original type or of `dtype`, if specified. The
+        shape of the array is (`ysize`, `xsize`).
         """
         return np.squeeze(self.layer(index), dtype)
