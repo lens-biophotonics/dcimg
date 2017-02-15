@@ -2,7 +2,7 @@ import mmap
 import numpy as np
 
 
-class DcimgFile(object):
+class DCIMGFile(object):
     """A DCIMG file (Hamamatsu format), memory-mapped.
 
     After use, call the close() method to release resources properly.
