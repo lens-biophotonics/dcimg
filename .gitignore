@@ -2,3 +2,6 @@
 *_env/
 .idea/
 .directory
+build/
+*.egg-info
+dist/
