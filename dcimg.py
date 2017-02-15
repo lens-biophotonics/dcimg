@@ -44,14 +44,17 @@ class DCIMGFile(object):
     ]
 
     def __init__(self, file_name=None):
-        self.file_name = file_name
         self.mm = None  #: memory-mapped array
         self.file_header = None
         self.sess_header = None
         self.file_size = None
         self.dtype = None
+        self.file_name = file_name
+        if file_name is not None:
+            self.open()
 
     def open(self, file_name=None):
+        self.close()
         if file_name is None:
             file_name = self.file_name
 
