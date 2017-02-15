@@ -11,17 +11,16 @@ class DCIMGFile(object):
     def __init__(self, file_name=None):
         self.file_name = file_name
         self.mm = None  #: memory-mapped array
-        self.nfrms = None  #: number of frames
         self.file_size = None
-        self.footer_loc = None
+        self.footer_loc = None  #: footer offset
         self.byte_depth = None  #: number of bytes per pixel
-        self.x_size = None
-        self.y_size = None
+        self.xsize = None
+        self.ysize = None
+        self.nfrms = None  #: number of frames
         self.bytes_per_row = None
         self.bytes_per_img = None
         self.npa = None  #: memory-mapped numpy array
         self.dtype = None
-        self.images_per_layer = 5
 
     def open(self, file_name=None):
         if file_name is None:
@@ -39,7 +38,7 @@ class DCIMGFile(object):
 
     @property
     def shape(self):
-        return (self.nfrms, self.x_size, self.y_size)
+        return (self.nfrms, self.xsize, self.ysize)
 
     def close(self):
         if self.mm is not None:
@@ -75,48 +74,48 @@ class DCIMGFile(object):
                 "Invalid byte-depth: {}".format(self.byte_depth))
 
         index = 164
-        self.x_size = int.from_bytes(self.mm[index:index + 4],
-                                     byteorder="little")
+        self.xsize = int.from_bytes(self.mm[index:index + 4],
+                                    byteorder="little")
 
         index = 168
         self.bytes_per_row = int.from_bytes(self.mm[index:index + 4],
                                             byteorder="little")
 
         index = 172
-        self.y_size = int.from_bytes(self.mm[index:index + 4],
-                                     byteorder="little")
+        self.ysize = int.from_bytes(self.mm[index:index + 4],
+                                    byteorder="little")
 
         index = 176
         self.bytes_per_img = int.from_bytes(self.mm[index:index + 4],
                                             byteorder="little")
 
-        if self.bytes_per_row != self.byte_depth * self.y_size:
+        if self.bytes_per_row != self.byte_depth * self.ysize:
             e_str = "bytes_per_row ({bytes_per_row}) " \
                     "!= byte_depth ({byte_depth}) * nrows ({y_size})" \
                 .format(**vars(self))
             raise RuntimeError(e_str)
 
-        if self.bytes_per_img != self.bytes_per_row * self.y_size:
+        if self.bytes_per_img != self.bytes_per_row * self.ysize:
             e_str = "bytes per img ({bytes_per_img}) != nrows ({y_size}) * " \
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise RuntimeError(e_str)
 
-    def layer(self, index, n_of_images, dtype=None):
+    def layer(self, index, frames_per_layer, dtype=None):
         """Return a layer, i.e. a stack of images.
 
         Parameters
         ----------
         index : layer index
-        n_of_images : number of images per layer
+        frames_per_layer : number of images per layer
         dtype
 
         Returns
         -------
         A numpy array of the original type or of dtype, if specified.
         """
-        offset = 232 + self.bytes_per_img * n_of_images * index
-        a = np.ndarray((n_of_images, self.x_size, self.y_size), self.dtype,
-                       self.mm, offset)
+        offset = 232 + self.bytes_per_img * frames_per_layer * index
+        a = np.ndarray((frames_per_layer, self.xsize, self.ysize),
+                       self.dtype, self.mm, offset)
         if dtype is None:
             return a
         return a.astype(dtype)
