@@ -53,21 +53,6 @@ class DCIMGFile(object):
         if file_name is not None:
             self.open()
 
-    def open(self, file_name=None):
-        self.close()
-        if file_name is None:
-            file_name = self.file_name
-
-        with open(file_name, 'r') as f:
-            mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
-
-        self.mm = mm
-
-        try:
-            self._parse_header()
-        except RuntimeError:
-            self.close()
-
     @property
     def nfrms(self):
         return self.sess_header['nfrms'][0]
@@ -108,6 +93,21 @@ class DCIMGFile(object):
     @property
     def timestamp_offset(self):
         return int(self.session_footer_offset + 272 + 4 * self.nfrms)
+
+    def open(self, file_name=None):
+        self.close()
+        if file_name is None:
+            file_name = self.file_name
+
+        with open(file_name, 'r') as f:
+            mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
+
+        self.mm = mm
+
+        try:
+            self._parse_header()
+        except RuntimeError:
+            self.close()
 
     def close(self):
         if self.mm is not None:
