@@ -94,6 +94,25 @@ class DCIMGFile(object):
     def timestamp_offset(self):
         return int(self.session_footer_offset + 272 + 4 * self.nfrms)
 
+    @property
+    def timestamps(self):
+        """A numpy array with frame timestamps."""
+        ts = np.zeros(self.nfrms)
+        index = self.timestamp_offset
+        for i in range(0, self.nfrms):
+            whole = int.from_bytes(self.mm[index:index + 4], 'little')
+            index += 4
+
+            fraction = int.from_bytes(self.mm[index:index + 4], 'little')
+            index += 4
+
+            val = whole
+            if fraction != 0:
+                val += fraction * pow(10, -(floor(log10(fraction)) + 1))
+            ts[i] = val
+
+        return ts
+
     def open(self, file_name=None):
         self.close()
         if file_name is None:
@@ -147,25 +166,6 @@ class DCIMGFile(object):
             e_str = "bytes per img ({bytes_per_img}) != nrows ({y_size}) * " \
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise ValueError(e_str)
-
-    @property
-    def timestamps(self):
-        """A numpy array with frame timestamps."""
-        ts = np.zeros(self.nfrms)
-        index = self.timestamp_offset
-        for i in range(0, self.nfrms):
-            whole = int.from_bytes(self.mm[index:index + 4], 'little')
-            index += 4
-
-            fraction = int.from_bytes(self.mm[index:index + 4], 'little')
-            index += 4
-
-            val = whole
-            if fraction != 0:
-                val += fraction * pow(10, -(floor(log10(fraction)) + 1))
-            ts[i] = val
-
-        return ts
 
     def layer(self, index, frames_per_layer=1, dtype=None):
         """Return a layer, i.e a stack of frames.
