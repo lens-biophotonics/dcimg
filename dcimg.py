@@ -108,6 +108,7 @@ class DCIMGFile(object):
             self._parse_header()
         except ValueError:
             self.close()
+            raise
 
     def close(self):
         if self.mm is not None:
