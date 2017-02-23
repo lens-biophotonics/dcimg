@@ -106,7 +106,7 @@ class DCIMGFile(object):
 
         try:
             self._parse_header()
-        except RuntimeError:
+        except ValueError:
             self.close()
 
     def close(self):
@@ -120,7 +120,7 @@ class DCIMGFile(object):
                                          dtype=self.FILE_HDR_DTYPE)
 
         if not self.file_header['file_format'] == b'DCIMG':
-            raise RuntimeError('Invalid DCIMG file')
+            raise ValueError('Invalid DCIMG file')
 
         self.sess_header = np.zeros(1, dtype=self.SESS_HDR_DTYPE)
         index_from = self.header_size
@@ -133,19 +133,19 @@ class DCIMGFile(object):
         elif self.byte_depth == 2:
             self.dtype = np.uint16
         else:
-            raise RuntimeError(
+            raise ValueError(
                 "Invalid byte-depth: {}".format(self.byte_depth))
 
         if self.bytes_per_row != self.byte_depth * self.ysize:
             e_str = "bytes_per_row ({bytes_per_row}) " \
                     "!= byte_depth ({byte_depth}) * nrows ({y_size})" \
                 .format(**vars(self))
-            raise RuntimeError(e_str)
+            raise ValueError(e_str)
 
         if self.bytes_per_img != self.bytes_per_row * self.ysize:
             e_str = "bytes per img ({bytes_per_img}) != nrows ({y_size}) * " \
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
-            raise RuntimeError(e_str)
+            raise ValueError(e_str)
 
     @property
     def timestamps(self):
