@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='dcimg',
-    version='0.1.0',
+    version='0.1.1',
     description='Python module to read Hamamatsu DCIMG files',
     long_description='Python module to read Hamamatsu DCIMG files',
     url='',
