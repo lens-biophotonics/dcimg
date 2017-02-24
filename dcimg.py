@@ -57,6 +57,9 @@ class DCIMGFile(object):
         return '<DCIMGFile shape={}x{}x{} dtype={} file_name={}>'.format(
             *self.shape, self.dtype, self.file_name)
 
+    def __del__(self):
+        self.close()
+
     @property
     def nfrms(self):
         return self.sess_header['nfrms'][0]
