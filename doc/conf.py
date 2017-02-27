@@ -35,8 +35,14 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
     'numpydoc'
 ]
+
+
+intersphinx_mapping = {
+    'numpy': ('https://docs.scipy.org/doc/numpy', None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

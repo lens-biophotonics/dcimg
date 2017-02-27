@@ -188,9 +188,10 @@ class DCIMGFile(object):
 
         Returns
         -------
-        A numpy array of the original type or of `dtype`, if specified. The
-        shape of the array is (`end_frame` - `start_frame`, :attr:`ysize`,
-        :attr:`xsize`).
+        :class:`numpy.ndarray`
+            A numpy array of the original type or of `dtype`, if specified. The
+            shape of the array is (`end_frame` - `start_frame`, :attr:`ysize`,
+            :attr:`xsize`).
         """
 
         if end_frame is None:
@@ -230,9 +231,10 @@ class DCIMGFile(object):
 
         Returns
         -------
-        A numpy array of the original type or of `dtype`, if specified. The
-        shape of the array is  (`frames_per_layer`, :attr:`ysize`,
-        :attr:`xsize`).
+        :class:`numpy.ndarray`
+            A numpy array of the original type or of `dtype`, if specified. The
+            shape of the array is  (`frames_per_layer`, :attr:`ysize`,
+            :attr:`xsize`).
         """
         start_frame = index * frames_per_layer
         end_frame = start_frame + frames_per_layer
@@ -251,8 +253,9 @@ class DCIMGFile(object):
 
         Returns
         -------
-        A numpy array of the original type or of dtype, if specified. The
-        shape of the array is (self.nfrms, ysize, xsize).
+        :class:`numpy.ndarray`
+            A numpy array of the original type or of dtype, if specified. The
+            shape of the array is :attr:`shape`.
         """
         return self.layer_idx(0, self.nfrms, dtype)
 
@@ -269,7 +272,8 @@ class DCIMGFile(object):
 
         Returns
         -------
-        A numpy array of the original type or of `dtype`, if specified. The
-        shape of the array is (`ysize`, `xsize`).
+        :class:`numpy.ndarray`
+            A numpy array of the original type or of `dtype`, if specified. The
+            shape of the array is (:attr:`ysize`, :attr:`xsize`).
         """
         return np.squeeze(self.layer_idx(index), dtype)
