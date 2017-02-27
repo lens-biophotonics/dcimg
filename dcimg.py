@@ -60,6 +60,12 @@ class DCIMGFile(object):
     def __del__(self):
         self.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     @property
     def nfrms(self):
         return self.sess_header['nfrms'][0]
