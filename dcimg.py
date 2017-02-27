@@ -174,31 +174,41 @@ class DCIMGFile(object):
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise ValueError(e_str)
 
-    def layer(self, index, frames_per_layer=1, dtype=None):
+    def layer(self, start_frame, end_frame=None, dtype=None):
         """Return a layer, i.e a stack of frames.
 
         Parameters
         ----------
-        index : layer index
-        frames_per_layer : number of frames per layer
+        start_frame : int
+            first frame to select
+        end_frame : int
+            last frame to select (noninclusive). If None, defaults to
+            :code:`start_frame + 1`
         dtype
 
         Returns
         -------
-        A numpy array of the original type or of dtype, if specified. The
-        shape of the array is (nframes, ysize, xsize).
+        A numpy array of the original type or of `dtype`, if specified. The
+        shape of the array is (`end_frame` - `start_frame`, :attr:`ysize`,
+        :attr:`xsize`).
         """
-        offset = 232 + self.bytes_per_img * frames_per_layer * index
-        a = np.ndarray((frames_per_layer, self.ysize, self.xsize),
-                       self.dtype, self.mm, offset)
+
+        if end_frame is None:
+            end_frame = start_frame + 1
+
+        nframes = end_frame - start_frame
+
+        offset = 232 + self.bytes_per_img * start_frame
+        a = np.ndarray(
+            (nframes, self.ysize, self.xsize), self.dtype, self.mm, offset)
 
         # retrieve the first 4 pixels of each frame, which are stored in the
         # file footer. Will overwrite [0000, FFFF, 0000, FFFF, 0000] at the
         # beginning of the frame.
         index = (self.session_footer_offset + 272
                  + self.nfrms * (4 + 8)  # 4 for frame count, 8 for timestamp
-                 + 4 * self.byte_depth * index * frames_per_layer)
-        for i in range(0, frames_per_layer):
+                 + 4 * self.byte_depth * start_frame)
+        for i in range(0, nframes):
             px = np.ndarray((1, 1, 4), self.dtype, self.mm, index)
             a[i, self.ysize - 1, 0:4] = px
             index += 4 * self.byte_depth
@@ -207,10 +217,33 @@ class DCIMGFile(object):
             return a
         return a.astype(dtype)
 
+    def layer_idx(self, index, frames_per_layer=1, dtype=None):
+        """Return a layer, i.e a stack of frames, by index.
+
+        Parameters
+        ----------
+        index : int
+            layer index
+        frames_per_layer : int
+            number of frames per layer
+        dtype
+
+        Returns
+        -------
+        A numpy array of the original type or of `dtype`, if specified. The
+        shape of the array is  (`frames_per_layer`, :attr:`ysize`,
+        :attr:`xsize`).
+        """
+        start_frame = index * frames_per_layer
+        end_frame = start_frame + frames_per_layer
+        return self.layer(start_frame, end_frame)
+
+
     def whole(self, dtype=None):
         """Convenience function to retrieve the whole stack.
 
-        Equivalent to call layer() with index=0 and frames_per_layer=self.nfrms
+        Equivalent to call :func:`layer_idx` with `index` = 0 and
+        `frames_per_layer` = :attr:`nfrms`
 
         Parameters
         ----------
@@ -221,12 +254,12 @@ class DCIMGFile(object):
         A numpy array of the original type or of dtype, if specified. The
         shape of the array is (self.nfrms, ysize, xsize).
         """
-        return self.layer(0, self.nfrms, dtype)
+        return self.layer_idx(0, self.nfrms, dtype)
 
     def frame(self, index, dtype=None):
         """Convenience function to retrieve a single layer.
 
-        Same as calling :py:func:`layer` with `frames_per_layer`=1.
+        Same as calling :func:`layer` and squeezing.
 
         Parameters
         ----------
@@ -239,4 +272,4 @@ class DCIMGFile(object):
         A numpy array of the original type or of `dtype`, if specified. The
         shape of the array is (`ysize`, `xsize`).
         """
-        return np.squeeze(self.layer(index), dtype)
+        return np.squeeze(self.layer_idx(index), dtype)
