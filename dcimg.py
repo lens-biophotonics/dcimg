@@ -87,6 +87,13 @@ class DCIMGFile(object):
 
     @property
     def shape(self):
+        """Shape of the whole image stack.
+
+        Returns
+        -------
+        tuple
+            (:attr:`nfrms`, :attr:`xsize`, :attr:`ysize`)
+        """
         return (self.nfrms, self.xsize, self.ysize)
 
     @property
