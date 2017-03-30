@@ -152,6 +152,7 @@ class DCIMGFile(object):
     def close(self):
         if self.mm is not None:
             self.mm.close()
+        del self.mm
         self.mm = None
 
     def _parse_header(self):
