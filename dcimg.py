@@ -188,8 +188,8 @@ class DCIMGFile(object):
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise ValueError(e_str)
 
-    def layer(self, start_frame, end_frame=None, dtype=None):
-        """Return a layer, i.e a stack of frames.
+    def slice(self, start_frame, end_frame=None, dtype=None):
+        """Return a slice along `Z`, i.e. a substack of frames.
 
         Parameters
         ----------
@@ -232,34 +232,34 @@ class DCIMGFile(object):
             return a
         return a.astype(dtype)
 
-    def layer_idx(self, index, frames_per_layer=1, dtype=None):
-        """Return a layer, i.e a stack of frames, by index.
+    def slice_idx(self, index, frames_per_slice=1, dtype=None):
+        """Return a slice, i.e. a substack of frames, by index.
 
         Parameters
         ----------
         index : int
-            layer index
-        frames_per_layer : int
-            number of frames per layer
+            slice index
+        frames_per_slice : int
+            number of frames per slice
         dtype
 
         Returns
         -------
         :class:`numpy.ndarray`
             A numpy array of the original type or of `dtype`, if specified. The
-            shape of the array is  (`frames_per_layer`, :attr:`ysize`,
+            shape of the array is  (`frames_per_slice`, :attr:`ysize`,
             :attr:`xsize`).
         """
-        start_frame = index * frames_per_layer
-        end_frame = start_frame + frames_per_layer
-        return self.layer(start_frame, end_frame)
+        start_frame = index * frames_per_slice
+        end_frame = start_frame + frames_per_slice
+        return self.slice(start_frame, end_frame)
 
 
     def whole(self, dtype=None):
         """Convenience function to retrieve the whole stack.
 
-        Equivalent to call :func:`layer_idx` with `index` = 0 and
-        `frames_per_layer` = :attr:`nfrms`
+        Equivalent to call :func:`slice_idx` with `index` = 0 and
+        `frames_per_slice` = :attr:`nfrms`
 
         Parameters
         ----------
@@ -271,17 +271,17 @@ class DCIMGFile(object):
             A numpy array of the original type or of dtype, if specified. The
             shape of the array is :attr:`shape`.
         """
-        return self.layer_idx(0, self.nfrms, dtype)
+        return self.slice_idx(0, self.nfrms, dtype)
 
     def frame(self, index, dtype=None):
-        """Convenience function to retrieve a single layer.
+        """Convenience function to retrieve a single frame (Z plane).
 
-        Same as calling :func:`layer` and squeezing.
+        Same as calling :func:`frame` and squeezing.
 
         Parameters
         ----------
         index : int
-            layer index
+            frame index
         dtype
 
         Returns
@@ -290,4 +290,4 @@ class DCIMGFile(object):
             A numpy array of the original type or of `dtype`, if specified. The
             shape of the array is (:attr:`ysize`, :attr:`xsize`).
         """
-        return np.squeeze(self.layer_idx(index), dtype)
+        return np.squeeze(self.slice_idx(index), dtype)
