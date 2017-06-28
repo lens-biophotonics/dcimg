@@ -164,6 +164,14 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
+from sphinx.ext.autodoc import (
+    ClassLevelDocumenter, InstanceAttributeDocumenter)
+
+def iad_add_directive_header(self, sig):
+    ClassLevelDocumenter.add_directive_header(self, sig)
+
+InstanceAttributeDocumenter.add_directive_header = iad_add_directive_header
+
 
 def setup(app):
     app.add_stylesheet('custom.css')

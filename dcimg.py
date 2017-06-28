@@ -50,6 +50,7 @@ class DCIMGFile(object):
         self.file_size = None
         self.dtype = None
         self.file_name = file_name
+        self.retrieve_first_4_pixels = True
         if file_name is not None:
             self.open()
 
@@ -220,13 +221,16 @@ class DCIMGFile(object):
         # retrieve the first 4 pixels of each frame, which are stored in the
         # file footer. Will overwrite [0000, FFFF, 0000, FFFF, 0000] at the
         # beginning of the frame.
-        index = (self.session_footer_offset + 272
-                 + self.nfrms * (4 + 8)  # 4 for frame count, 8 for timestamp
-                 + 4 * self.byte_depth * start_frame)
-        for i in range(0, nframes):
-            px = np.ndarray((1, 1, 4), self.dtype, self.mm, index)
-            a[i, self.ysize - 1, 0:4] = px
-            index += 4 * self.byte_depth
+        if self.retrieve_first_4_pixels:
+            index = (self.session_footer_offset + 272
+                     + self.nfrms * (4 + 8)  # 4: frame count, 8: timestamp
+                     + 4 * self.byte_depth * start_frame)
+            for i in range(0, nframes):
+                px = np.ndarray((1, 1, 4), self.dtype, self.mm, index)
+                a[i, -1, 0:4] = px
+                index += 4 * self.byte_depth
+        else:
+            a[:, -1, 0:4] = 0
 
         if dtype is None:
             return a
