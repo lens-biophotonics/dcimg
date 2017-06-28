@@ -50,7 +50,12 @@ class DCIMGFile(object):
         self.file_size = None
         self.dtype = None
         self.file_name = file_name
+
         self.retrieve_first_4_pixels = True
+        """For some reason, the first 4 pixels of each frame are stored in a
+        different area in the file. This switch enables retrieving those 4
+        pixels. If False, those pixels are set to 0. Defaults to True."""
+
         if file_name is not None:
             self.open()
 
@@ -189,7 +194,7 @@ class DCIMGFile(object):
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise ValueError(e_str)
 
-    def slice(self, start_frame, end_frame=None, dtype=None):
+    def slice(self, start_frame, end_frame=None, dtype=None, copy=True):
         """Return a slice along `Z`, i.e. a substack of frames.
 
         Parameters
@@ -200,6 +205,9 @@ class DCIMGFile(object):
             last frame to select (noninclusive). If None, defaults to
             :code:`start_frame + 1`
         dtype
+        copy : bool
+            If True, the requested slice is copied to memory. Otherwise a
+            memory mapped array is returned.
 
         Returns
         -------
@@ -217,6 +225,9 @@ class DCIMGFile(object):
         offset = 232 + self.bytes_per_img * start_frame
         a = np.ndarray(
             (nframes, self.ysize, self.xsize), self.dtype, self.mm, offset)
+
+        if copy:
+            a = np.copy(a)
 
         # retrieve the first 4 pixels of each frame, which are stored in the
         # file footer. Will overwrite [0000, FFFF, 0000, FFFF, 0000] at the
@@ -236,7 +247,7 @@ class DCIMGFile(object):
             return a
         return a.astype(dtype)
 
-    def slice_idx(self, index, frames_per_slice=1, dtype=None):
+    def slice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
         """Return a slice, i.e. a substack of frames, by index.
 
         Parameters
@@ -246,6 +257,7 @@ class DCIMGFile(object):
         frames_per_slice : int
             number of frames per slice
         dtype
+        copy : see :func:`slice`
 
         Returns
         -------
@@ -256,10 +268,10 @@ class DCIMGFile(object):
         """
         start_frame = index * frames_per_slice
         end_frame = start_frame + frames_per_slice
-        return self.slice(start_frame, end_frame)
+        return self.slice(start_frame, end_frame, dtype, copy)
 
 
-    def whole(self, dtype=None):
+    def whole(self, dtype=None, copy=True):
         """Convenience function to retrieve the whole stack.
 
         Equivalent to call :func:`slice_idx` with `index` = 0 and
@@ -268,6 +280,7 @@ class DCIMGFile(object):
         Parameters
         ----------
         dtype
+        copy : see :func:`slice`
 
         Returns
         -------
@@ -275,9 +288,9 @@ class DCIMGFile(object):
             A numpy array of the original type or of dtype, if specified. The
             shape of the array is :attr:`shape`.
         """
-        return self.slice_idx(0, self.nfrms, dtype)
+        return self.slice_idx(0, self.nfrms, dtype, copy)
 
-    def frame(self, index, dtype=None):
+    def frame(self, index, dtype=None, copy=True):
         """Convenience function to retrieve a single frame (Z plane).
 
         Same as calling :func:`frame` and squeezing.
@@ -287,6 +300,7 @@ class DCIMGFile(object):
         index : int
             frame index
         dtype
+        copy : see :func:`slice`
 
         Returns
         -------
@@ -294,4 +308,4 @@ class DCIMGFile(object):
             A numpy array of the original type or of `dtype`, if specified. The
             shape of the array is (:attr:`ysize`, :attr:`xsize`).
         """
-        return np.squeeze(self.slice_idx(index), dtype)
+        return np.squeeze(self.slice_idx(index, dtype=dtype, copy=copy))
