@@ -240,10 +240,10 @@ class DCIMGFile(object):
                      + 4 * self.byte_depth * start_frame)
             for i in range(0, nframes):
                 px = np.ndarray((1, 1, 4), self.dtype, self.mm, index)
-                a[i, -1, 0:4] = px
+                a[i, 0, 0:4] = px
                 index += 4 * self.byte_depth
         else:
-            a[:, -1, 0:4] = 0
+            a[:, 0, 0:4] = 0
 
         if dtype is None:
             return a
