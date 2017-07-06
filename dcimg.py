@@ -4,6 +4,8 @@
 # Python Microscopy: http://www.python-microscopy.org
 #                    https://bitbucket.org/david_baddeley/python-microscopy
 
+# Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>
+
 import mmap
 import numpy as np
 from math import pow, log10, floor
