@@ -49,7 +49,6 @@ class DCIMGFile(object):
         self.mm = None  #: memory-mapped array
         self.file_header = None
         self.sess_header = None
-        self.file_size = None
         self.dtype = None
         self.file_name = file_name
 
@@ -73,6 +72,10 @@ class DCIMGFile(object):
 
     def __exit__(self, *args):
         self.close()
+
+    @property
+    def file_size(self):
+        return self.file_header['file_size'][0]
 
     @property
     def nfrms(self):
