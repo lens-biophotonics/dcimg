@@ -272,7 +272,6 @@ class DCIMGFile(object):
         end_frame = start_frame + frames_per_slice
         return self.slice(start_frame, end_frame, dtype, copy)
 
-
     def whole(self, dtype=None, copy=True):
         """Convenience function to retrieve the whole stack.
 
