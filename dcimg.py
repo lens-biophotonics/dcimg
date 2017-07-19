@@ -164,9 +164,8 @@ class DCIMGFile(object):
         self.mm = None
 
     def _parse_header(self):
-        self.file_header = np.zeros(1, dtype=self.FILE_HDR_DTYPE)
-        self.file_header = np.fromstring(self.mm[0:self.file_header.nbytes],
-                                         dtype=self.FILE_HDR_DTYPE)
+        data = self.mm[0:np.dtype(self.FILE_HDR_DTYPE).itemsize]
+        self.file_header = np.fromstring(data, dtype=self.FILE_HDR_DTYPE)
 
         if not self.file_header['file_format'] == b'DCIMG':
             raise ValueError('Invalid DCIMG file')
