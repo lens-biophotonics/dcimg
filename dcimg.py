@@ -205,7 +205,7 @@ class DCIMGFile(object):
             raise ValueError(e_str)
 
     def slice(self, start_frame, end_frame=None, dtype=None, copy=True):
-        """Return a slice along `Z`, i.e. a substack of frames.
+        """Return a slice along `Z`, i.e.\  a substack of frames.
 
         Parameters
         ----------
@@ -258,7 +258,7 @@ class DCIMGFile(object):
         return a.astype(dtype)
 
     def slice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
-        """Return a slice, i.e. a substack of frames, by index.
+        """Return a slice, i.e.\  a substack of frames, by index.
 
         Parameters
         ----------
@@ -302,7 +302,7 @@ class DCIMGFile(object):
     def frame(self, index, dtype=None, copy=True):
         """Convenience function to retrieve a single frame (Z plane).
 
-        Same as calling :func:`frame` and squeezing.
+        Same as calling :func:`slice_idx` and squeezing.
 
         Parameters
         ----------
