@@ -47,6 +47,8 @@ class DCIMGFile(object):
 
     def __init__(self, file_name=None):
         self.mm = None  #: memory-mapped array
+        self.fileno = None  #: file descriptor
+        self.file = None
         self.file_header = None
         self.sess_header = None
         self.dtype = None
@@ -149,9 +151,11 @@ class DCIMGFile(object):
         if file_name is None:
             file_name = self.file_name
 
-        with open(file_name, 'r') as f:
-            mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
+        f = open(file_name, 'r')
+        mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
 
+        self.fileno = f.fileno()
+        self.file = f
         self.mm = mm
 
         try:
@@ -165,6 +169,8 @@ class DCIMGFile(object):
             self.mm.close()
         del self.mm
         self.mm = None
+        if self.file is not None:
+            self.file.close()
 
     def _parse_header(self):
         data = self.mm[0:np.dtype(self.FILE_HDR_DTYPE).itemsize]
