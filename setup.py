@@ -36,9 +36,9 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='dcimg image files',
+    keywords='dcimg image files hamamatsu',
 
-    py_modules=["dcimg"],
+    py_modules=['dcimg'],
 
     install_requires=['numpy'],
 
@@ -50,4 +50,3 @@ setup(
         'dev': ['pip-tools'],
     },
 )
-
