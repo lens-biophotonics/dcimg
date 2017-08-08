@@ -7,8 +7,20 @@
 # Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>
 
 import mmap
-import numpy as np
 from math import pow, log10, floor
+
+import semver
+import numpy as np
+
+major = 0
+minor = 2
+patch = 2
+
+prerelease = None
+build = None
+
+version = semver.format_version(major, minor, patch)
+full_version = semver.format_version(major, minor, patch, prerelease, build)
 
 
 class DCIMGFile(object):
