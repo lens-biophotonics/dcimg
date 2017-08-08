@@ -13,8 +13,8 @@ import semver
 import numpy as np
 
 major = 0
-minor = 2
-patch = 2
+minor = 3
+patch = 0
 
 prerelease = None
 build = None
