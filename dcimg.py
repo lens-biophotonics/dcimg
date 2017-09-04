@@ -58,7 +58,8 @@ class DCIMGFile(object):
     ]
 
     def __init__(self, file_name=None):
-        self.mm = None  #: memory-mapped array
+        self.mm = None
+        """a :class:`python:mmap.mmap` object"""
         self.fileno = None  #: file descriptor
         self.file = None
         self.file_header = None
