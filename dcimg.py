@@ -123,9 +123,9 @@ class DCIMGFile(object):
         Returns
         -------
         tuple
-            (:attr:`nfrms`, :attr:`xsize`, :attr:`ysize`)
+            (:attr:`nfrms`, :attr:`ysize`, :attr:`xsize`)
         """
-        return (self.nfrms, self.xsize, self.ysize)
+        return (self.nfrms, self.ysize, self.xsize)
 
     @property
     def header_size(self):
