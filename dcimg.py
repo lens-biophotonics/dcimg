@@ -7,7 +7,7 @@
 # Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>
 
 import mmap
-from math import pow, log10, floor
+from math import pow, log10, floor, ceil
 
 import semver
 import numpy as np
@@ -60,6 +60,9 @@ class DCIMGFile(object):
     def __init__(self, file_name=None):
         self.mm = None
         """a :class:`python:mmap.mmap` object"""
+        self.mma = None
+        """memory-mapped :class:`numpy.ndarray`"""
+
         self.fileno = None  #: file descriptor
         self.file = None
         self.file_header = None
@@ -71,6 +74,10 @@ class DCIMGFile(object):
         """For some reason, the first 4 pixels of each frame are stored in a
         different area in the file. This switch enables retrieving those 4
         pixels. If False, those pixels are set to 0. Defaults to True."""
+
+        self._4px = None
+        """A :class:`numpy.ndarray` of shape (:attr:`nfrms`, 4) containing
+        the first 4 pixels of each frame."""
 
         if file_name is not None:
             self.open()
@@ -177,6 +184,13 @@ class DCIMGFile(object):
             self.close()
             raise
 
+        offset = (self.session_footer_offset + 272
+                  + self.nfrms * (4 + 8))  # 4: frame count, 8: timestamp
+        self._4px = np.ndarray((self.nfrms, 4), self.dtype, self.mm, offset)
+
+        offset = 232
+        self.mma = np.ndarray(self.shape, self.dtype, self.mm, offset)
+
     def close(self):
         if self.mm is not None:
             self.mm.close()
@@ -217,6 +231,60 @@ class DCIMGFile(object):
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise ValueError(e_str)
 
+    def __getitem__(self, item, copy=False):
+        a = self.mma[item]
+
+        # ensure item is a tuple
+        item = np.index_exp[item]
+
+        # ensure all items are slice objects
+        myitem = []
+        for i in item:
+            if isinstance(i, int):
+                myitem.append(slice(i, i + 1))
+            elif i is Ellipsis:
+                for _ in range(0, 3 - len(item) + 1):
+                    myitem.append(slice(0, self.shape[len(myitem)], 1))
+            elif isinstance(i, slice):
+                myitem.append(i)
+            else:
+                raise TypeError("Invalid type: {}".format(type(i)))
+
+        for _ in range(0, 3 - len(myitem)):
+            myitem.append(slice(0, self.shape[len(myitem)], 1))
+
+        if copy:
+            a = np.copy(a)
+
+        startx = myitem[-1].start
+        if startx is None:
+            startx = 0
+        stopx = myitem[-1].stop
+        if stopx is None:
+            stopx = self.shape[-1]
+        starty = myitem[-2].start
+        if (starty is None or starty == 0) and startx < 4:
+            stopx = 4 if stopx > 4 else stopx
+            stepx = myitem[-1].step
+            if isinstance(a, self.dtype):
+                if self.retrieve_first_4_pixels:
+                    a = self._4px[myitem[0].start, startx]
+                else:
+                    a = 0
+                return a
+            elif len(a.shape) > 1:
+                a_index_exp = np.index_exp[
+                              ..., 0, :ceil((stopx - startx) / stepx)]
+            else:
+                a_index_exp = np.index_exp[
+                              ..., :ceil((stopx - startx) / stepx)]
+            if self.retrieve_first_4_pixels:
+                a[a_index_exp] = self._4px[myitem[0], startx:stopx:stepx]
+            else:
+                a[a_index_exp] = 0
+
+        return a
+
     def slice(self, start_frame, end_frame=None, dtype=None, copy=True):
         """Return a slice along `Z`, i.e.\  a substack of frames.
 
@@ -239,36 +307,11 @@ class DCIMGFile(object):
             shape of the array is (`end_frame` - `start_frame`, :attr:`ysize`,
             :attr:`xsize`).
         """
+        a = self.__getitem__(slice(start_frame, end_frame), copy=copy)
+        if dtype is not None:
+            a = a.astype(dtype)
 
-        if end_frame is None:
-            end_frame = start_frame + 1
-
-        nframes = end_frame - start_frame
-
-        offset = 232 + self.bytes_per_img * start_frame
-        a = np.ndarray(
-            (nframes, self.ysize, self.xsize), self.dtype, self.mm, offset)
-
-        if copy:
-            a = np.copy(a)
-
-        # retrieve the first 4 pixels of each frame, which are stored in the
-        # file footer. Will overwrite [0000, FFFF, 0000, FFFF, 0000] at the
-        # beginning of the frame.
-        if self.retrieve_first_4_pixels:
-            index = (self.session_footer_offset + 272
-                     + self.nfrms * (4 + 8)  # 4: frame count, 8: timestamp
-                     + 4 * self.byte_depth * start_frame)
-            for i in range(0, nframes):
-                px = np.ndarray((1, 1, 4), self.dtype, self.mm, index)
-                a[i, 0, 0:4] = px
-                index += 4 * self.byte_depth
-        else:
-            a[:, 0, 0:4] = 0
-
-        if dtype is None:
-            return a
-        return a.astype(dtype)
+        return a
 
     def slice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
         """Return a slice, i.e.\  a substack of frames, by index.
