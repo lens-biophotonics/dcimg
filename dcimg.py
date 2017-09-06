@@ -62,6 +62,7 @@ class DCIMGFile(object):
         """a :class:`python:mmap.mmap` object"""
         self.mma = None
         """memory-mapped :class:`numpy.ndarray`"""
+        self.deep_copy_enabled = None
 
         self.fileno = None  #: file descriptor
         self.file = None
@@ -253,7 +254,12 @@ class DCIMGFile(object):
         for _ in range(0, 3 - len(myitem)):
             myitem.append(slice(0, self.shape[len(myitem)], 1))
 
-        if copy:
+        if self.deep_copy_enabled is None:
+            deepcopy = copy
+        else:
+            deepcopy = self.deep_copy_enabled
+
+        if deepcopy:
             a = np.copy(a)
 
         startx = myitem[-1].start
