@@ -291,7 +291,7 @@ class DCIMGFile(object):
 
         return a
 
-    def slice(self, start_frame, end_frame=None, dtype=None, copy=True):
+    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
         """Return a slice along `Z`, i.e.\  a substack of frames.
 
         Parameters
@@ -319,7 +319,7 @@ class DCIMGFile(object):
 
         return a
 
-    def slice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
+    def zslice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
         """Return a slice, i.e.\  a substack of frames, by index.
 
         Parameters
@@ -340,12 +340,12 @@ class DCIMGFile(object):
         """
         start_frame = index * frames_per_slice
         end_frame = start_frame + frames_per_slice
-        return self.slice(start_frame, end_frame, dtype, copy)
+        return self.zslice(start_frame, end_frame, dtype, copy)
 
     def whole(self, dtype=None, copy=True):
         """Convenience function to retrieve the whole stack.
 
-        Equivalent to call :func:`slice_idx` with `index` = 0 and
+        Equivalent to call :func:`zslice_idx` with `index` = 0 and
         `frames_per_slice` = :attr:`nfrms`
 
         Parameters
@@ -359,12 +359,12 @@ class DCIMGFile(object):
             A numpy array of the original type or of dtype, if specified. The
             shape of the array is :attr:`shape`.
         """
-        return self.slice_idx(0, self.nfrms, dtype, copy)
+        return self.zslice_idx(0, self.nfrms, dtype, copy)
 
     def frame(self, index, dtype=None, copy=True):
         """Convenience function to retrieve a single frame (Z plane).
 
-        Same as calling :func:`slice_idx` and squeezing.
+        Same as calling :func:`zslice_idx` and squeezing.
 
         Parameters
         ----------
@@ -379,4 +379,4 @@ class DCIMGFile(object):
             A numpy array of the original type or of `dtype`, if specified. The
             shape of the array is (:attr:`ysize`, :attr:`xsize`).
         """
-        return np.squeeze(self.slice_idx(index, dtype=dtype, copy=copy))
+        return np.squeeze(self.zslice_idx(index, dtype=dtype, copy=copy))
