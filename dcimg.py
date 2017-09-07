@@ -269,6 +269,8 @@ class DCIMGFile(object):
         if (starty is None or starty == 0) and startx < 4:
             stopx = 4 if stopx > 4 else stopx
             stepx = myitem[-1].step
+            if stepx is None:
+                stepx = 1
             if isinstance(a, self.dtype):
                 if self.retrieve_first_4_pixels:
                     a = self._4px[myitem[0].start, startx]
