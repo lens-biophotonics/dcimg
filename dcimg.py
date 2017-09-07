@@ -6,8 +6,8 @@
 
 # Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>
 
+import math
 import mmap
-from math import pow, log10, floor, ceil
 
 import numpy as np
 
@@ -158,7 +158,8 @@ class DCIMGFile(object):
 
             val = whole
             if fraction != 0:
-                val += fraction * pow(10, -(floor(log10(fraction)) + 1))
+                val += fraction * math.pow(
+                    10, -(math.floor(math.log10(fraction)) + 1))
             ts[i] = val
 
         return ts
@@ -276,10 +277,10 @@ class DCIMGFile(object):
                 return a
             elif len(a.shape) > 1:
                 a_index_exp = np.index_exp[
-                              ..., 0, :ceil((stopx - startx) / stepx)]
+                              ..., 0, :math.ceil((stopx - startx) / stepx)]
             else:
                 a_index_exp = np.index_exp[
-                              ..., :ceil((stopx - startx) / stepx)]
+                              ..., :math.ceil((stopx - startx) / stepx)]
             if self.retrieve_first_4_pixels:
                 a[a_index_exp] = self._4px[myitem[0], startx:stopx:stepx]
             else:
