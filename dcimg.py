@@ -55,9 +55,9 @@ class DCIMGFile(object):
 
     def __init__(self, file_name=None):
         self.mm = None
-        """a :class:`python:mmap.mmap` object"""
+        """a `mmap.mmap` object"""
         self.mma = None
-        """memory-mapped :class:`numpy.ndarray`"""
+        """memory-mapped `numpy.ndarray`"""
         self.deep_copy_enabled = None
 
         self.fileno = None  #: file descriptor
@@ -73,8 +73,8 @@ class DCIMGFile(object):
         pixels. If False, those pixels are set to 0. Defaults to True."""
 
         self._4px = None
-        """A :class:`numpy.ndarray` of shape (:attr:`nfrms`, 4) containing
-        the first 4 pixels of each frame."""
+        """A `numpy.ndarray` of shape (`nfrms`, 4) containing the first 4
+        pixels of each frame."""
 
         if file_name is not None:
             self.open()
@@ -128,7 +128,7 @@ class DCIMGFile(object):
         Returns
         -------
         tuple
-            (:attr:`nfrms`, :attr:`ysize`, :attr:`xsize`)
+            (`nfrms`, `ysize`, `xsize`)
         """
         return (self.nfrms, self.ysize, self.xsize)
 
@@ -297,7 +297,7 @@ class DCIMGFile(object):
             first frame to select
         end_frame : int
             last frame to select (noninclusive). If None, defaults to
-            :code:`start_frame + 1`
+            `start_frame + 1`
         dtype
         copy : bool
             If True, the requested slice is copied to memory. Otherwise a
@@ -305,10 +305,10 @@ class DCIMGFile(object):
 
         Returns
         -------
-        :class:`numpy.ndarray`
+        `numpy.ndarray`
             A numpy array of the original type or of `dtype`, if specified. The
-            shape of the array is (`end_frame` - `start_frame`, :attr:`ysize`,
-            :attr:`xsize`).
+            shape of the array is (`end_frame` - `start_frame`, `ysize`,
+            `xsize`).
         """
         a = self.__getitem__(slice(start_frame, end_frame), copy=copy)
         if dtype is not None:
@@ -326,14 +326,13 @@ class DCIMGFile(object):
         frames_per_slice : int
             number of frames per slice
         dtype
-        copy : see :func:`slice`
+        copy : see `zslice`
 
         Returns
         -------
-        :class:`numpy.ndarray`
+        `numpy.ndarray`
             A numpy array of the original type or of `dtype`, if specified. The
-            shape of the array is  (`frames_per_slice`, :attr:`ysize`,
-            :attr:`xsize`).
+            shape of the array is  (`frames_per_slice`, `ysize`, `xsize`).
         """
         start_frame = index * frames_per_slice
         end_frame = start_frame + frames_per_slice
@@ -342,38 +341,38 @@ class DCIMGFile(object):
     def whole(self, dtype=None, copy=True):
         """Convenience function to retrieve the whole stack.
 
-        Equivalent to call :func:`zslice_idx` with `index` = 0 and
-        `frames_per_slice` = :attr:`nfrms`
+        Equivalent to call `zslice_idx` with `index` = 0 and
+        `frames_per_slice` = `nfrms`
 
         Parameters
         ----------
         dtype
-        copy : see :func:`slice`
+        copy : see `zslice`
 
         Returns
         -------
-        :class:`numpy.ndarray`
+        `numpy.ndarray`
             A numpy array of the original type or of dtype, if specified. The
-            shape of the array is :attr:`shape`.
+            shape of the array is `shape`.
         """
         return self.zslice_idx(0, self.nfrms, dtype, copy)
 
     def frame(self, index, dtype=None, copy=True):
         """Convenience function to retrieve a single frame (Z plane).
 
-        Same as calling :func:`zslice_idx` and squeezing.
+        Same as calling `zslice_idx` and squeezing.
 
         Parameters
         ----------
         index : int
             frame index
         dtype
-        copy : see :func:`slice`
+        copy : see `zslice`
 
         Returns
         -------
-        :class:`numpy.ndarray`
+        `numpy.ndarray`
             A numpy array of the original type or of `dtype`, if specified. The
-            shape of the array is (:attr:`ysize`, :attr:`xsize`).
+            shape of the array is (`ysize`, `xsize`).
         """
         return np.squeeze(self.zslice_idx(index, dtype=dtype, copy=copy))
