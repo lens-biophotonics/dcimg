@@ -239,11 +239,13 @@ class DCIMGFile(object):
         myitem = []
         for i in item:
             if isinstance(i, int):
-                myitem.append(slice(i, i + 1))
+                myitem.append(slice(i, i + 1, 1))
             elif i is Ellipsis:
                 for _ in range(0, 3 - len(item) + 1):
                     myitem.append(slice(0, self.shape[len(myitem)], 1))
             elif isinstance(i, slice):
+                if i.step is None:
+                    i = slice(i.start, i.stop, 1)
                 myitem.append(i)
             else:
                 raise TypeError("Invalid type: {}".format(type(i)))
@@ -262,29 +264,88 @@ class DCIMGFile(object):
         startx = myitem[-1].start
         if startx is None:
             startx = 0
+        elif startx < 0:
+            startx += self.shape[-1]
+
         stopx = myitem[-1].stop
         if stopx is None:
             stopx = self.shape[-1]
+        elif stopx < 0:
+            stopx += self.shape[-1] + 1
+
         starty = myitem[-2].start
-        if (starty is None or starty == 0) and startx < 4:
-            stopx = 4 if stopx > 4 else stopx
-            stepx = myitem[-1].step
-            if stepx is None:
-                stepx = 1
+        if starty is None:
+            starty = 0
+        elif starty < 0:
+            starty += self.shape[-2]
+
+        stopy = myitem[-2].stop
+        if stopy is None:
+            stopy = self.shape[-2]
+        elif stopy < 0:
+            stopy += self.shape[-2] + 1
+
+        if (starty == 0 or stopy == 0) and (startx < 4 or stopx < 4):
             if isinstance(a, self.dtype):
                 if self.retrieve_first_4_pixels:
                     a = self._4px[myitem[0].start, startx]
                 else:
                     a = 0
                 return a
-            elif len(a.shape) > 1:
-                a_index_exp = np.index_exp[
-                              ..., 0, :math.ceil((stopx - startx) / stepx)]
+
+            stepx = myitem[-1].step
+            if stepx is None:
+                stepx = 1
+
+            if startx < stopx:
+                newstartx = 0
+                newstopx = 4 if stopx > 4 else stopx
             else:
-                a_index_exp = np.index_exp[
-                              ..., :math.ceil((stopx - startx) / stepx)]
+                newstopx = a.shape[-1]
+                newstartx = 0 if a.shape[-1] < 4 else a.shape[-1] - 4
+
+            if newstartx == newstopx:
+                return np.empty([0])
+
+            newstartx //= abs(stepx)
+            newstopx //= abs(stepx)
+
+            newzsize = (myitem[0].stop - myitem[0].start) // myitem[0].step
+            newysize = (myitem[1].stop - myitem[1].start) // myitem[1].step
+            newxsize = (myitem[2].stop - myitem[2].start) // myitem[2].step
+
+            if starty < stopy:
+                newy = 0
+            else:
+                newy = -1
+
+            if len(a.shape) == 3:
+                a_index_exp = np.index_exp[:, newy, newstartx:newstopx]
+            elif len(a.shape) == 2:
+                if newzsize == 1:
+                    a_index_exp = np.index_exp[newy, newstartx:newstopx]
+                elif newysize == 1:
+                    a_index_exp = np.index_exp[:, newstartx:newstopx]
+                elif newxsize == 1:
+                    a_index_exp = np.index_exp[newstartx:newstopx]
+            elif len(a.shape) == 1:
+                if newzsize > 1:
+                    a_index_exp = np.index_exp[...]
+                elif newysize > 1:
+                    a_index_exp = np.index_exp[newy]
+                elif newxsize > 1:
+                    a_index_exp = np.index_exp[newstartx:newstopx]
+
             if self.retrieve_first_4_pixels:
-                a[a_index_exp] = self._4px[myitem[0], startx:stopx:stepx]
+                _range = sorted((startx, stopx))
+                _4start = max(0, _range[0])
+                _4stop = min(4, _range[1])
+                _4px = self._4px[myitem[0], _4start:_4stop:abs(stepx)]
+                if stepx < 0:
+                    _4px = _4px[..., ::-1]
+                if len(_4px.shape) != len(a[a_index_exp].shape):
+                    _4px = np.squeeze(_4px)
+                a[a_index_exp] = _4px
             else:
                 a[a_index_exp] = 0
 
