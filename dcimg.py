@@ -9,18 +9,14 @@
 import mmap
 from math import pow, log10, floor, ceil
 
-import semver
 import numpy as np
 
-major = 0
-minor = 3
-patch = 0
+_major = 0
+_minor = 3
+_micro = 0
 
-prerelease = None
-build = None
-
-version = semver.format_version(major, minor, patch)
-full_version = semver.format_version(major, minor, patch, prerelease, build)
+__version__ = '{major}.{minor}.{micro}'.format(major=_major, minor=_minor,
+                                               micro=_micro)
 
 
 class DCIMGFile(object):

@@ -5,4 +5,3 @@
 #    pip-compile --output-file requirements.txt requirements.in
 #
 numpy==1.13.0
-semver==2.7.7

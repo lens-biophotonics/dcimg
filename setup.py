@@ -1,10 +1,10 @@
 from setuptools import setup
 
-from dcimg import full_version
+from dcimg import __version__
 
 setup(
     name='dcimg',
-    version=full_version,
+    version=__version__,
     description='Python module to read Hamamatsu DCIMG files',
     long_description='Python module to read Hamamatsu DCIMG files',
     url='',
@@ -42,7 +42,7 @@ setup(
 
     py_modules=['dcimg'],
 
-    install_requires=['numpy', 'semver'],
+    install_requires=['numpy'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
