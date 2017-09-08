@@ -314,31 +314,20 @@ class DCIMGFile(object):
             newstartx //= abs(stepx)
             newstopx //= abs(stepx)
 
-            newzsize = (myitem[0].stop - myitem[0].start) // myitem[0].step
-            newysize = (myitem[1].stop - myitem[1].start) // myitem[1].step
-            newxsize = (myitem[2].stop - myitem[2].start) // myitem[2].step
+            newshape = [math.ceil(
+                (myitem[i].stop - myitem[i].start) / myitem[i].step)
+                for i in range(0, 3)]
+
+            old_shape = a.shape
+
+            a.shape = newshape
 
             if starty < stopy:
                 newy = 0
             else:
                 newy = -1
 
-            if len(a.shape) == 3:
-                a_index_exp = np.index_exp[:, newy, newstartx:newstopx]
-            elif len(a.shape) == 2:
-                if newzsize == 1:
-                    a_index_exp = np.index_exp[newy, newstartx:newstopx]
-                elif newysize == 1:
-                    a_index_exp = np.index_exp[:, newstartx:newstopx]
-                elif newxsize == 1:
-                    a_index_exp = np.index_exp[newstartx:newstopx]
-            elif len(a.shape) == 1:
-                if newzsize > 1:
-                    a_index_exp = np.index_exp[...]
-                elif newysize > 1:
-                    a_index_exp = np.index_exp[newy]
-                elif newxsize > 1:
-                    a_index_exp = np.index_exp[newstartx:newstopx]
+            a_index_exp = np.index_exp[..., newy, newstartx:newstopx]
 
             if self.retrieve_first_4_pixels:
                 _range = sorted((startx, stopx))
@@ -347,11 +336,11 @@ class DCIMGFile(object):
                 _4px = self._4px[myitem[0], _4start:_4stop:abs(stepx)]
                 if stepx < 0:
                     _4px = _4px[..., ::-1]
-                if len(_4px.shape) != len(a[a_index_exp].shape):
-                    _4px = np.squeeze(_4px)
                 a[a_index_exp] = _4px
             else:
                 a[a_index_exp] = 0
+
+            a.shape = old_shape
 
         return a
 
