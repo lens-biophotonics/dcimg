@@ -250,53 +250,44 @@ class DCIMGFile(object):
         myitem = []
         for i in item:
             if isinstance(i, int):
-                myitem.append(slice(i, i + 1, 1))
+                start = i
+                stop = i + 1
+                step = 1
             elif i is Ellipsis:
                 for _ in range(0, 3 - len(item) + 1):
                     myitem.append(slice(0, self.shape[len(myitem)], 1))
+                continue
             elif isinstance(i, slice):
-                step = i.step if i.step is not None else 1
-
                 start = i.start
-                if start is None:
-                    start = 0 if step > 0 else self.shape[len(myitem)]
-
                 stop = i.stop
-                if stop is None:
-                    stop = self.shape[len(myitem)] if step > 0 else 0
-
-                myitem.append(slice(start, stop, step))
+                step = i.step if i.step is not None else 1
             else:
                 raise TypeError("Invalid type: {}".format(type(i)))
+
+            if start is None:
+                start = 0 if step > 0 else self.shape[len(myitem)]
+            elif start < 0:
+                start += self.shape[len(myitem)]
+
+            if stop is None:
+                stop = self.shape[len(myitem)] if step > 0 else 0
+            elif stop < 0:
+                stop += self.shape[len(myitem)]
+
+            myitem.append(slice(start, stop, step))
 
         for _ in range(0, 3 - len(myitem)):
             myitem.append(slice(0, self.shape[len(myitem)], 1))
 
-        startx = myitem[-1].start
-        if startx is None:
-            startx = 0 if myitem[-1].step > 0 else self.shape[-1]
-        elif startx < 0:
-            startx += self.shape[-1]
+        startx = myitem[2].start
+        stopx = myitem[2].stop
+        stepx = myitem[2].step
 
-        stopx = myitem[-1].stop
-        if stopx is None:
-            stopx = self.shape[-1] if myitem[-1].step > 0 else 0
-        elif stopx < 0:
-            stopx += self.shape[-1] + 1
+        starty = myitem[1].start
+        stopy = myitem[1].stop
 
-        starty = myitem[-2].start
-        if starty is None:
-            starty = 0 if myitem[-2].step > 0 else self.shape[-2]
-        elif starty < 0:
-            starty += self.shape[-2]
-
-        stopy = myitem[-2].stop
-        if stopy is None:
-            stopy = self.shape[-2] if myitem[-2].step > 0 else 0
-        elif stopy < 0:
-            stopy += self.shape[-2] + 1
-
-        if (starty == 0 or stopy == 0) and (startx < 4 or stopx < 4):
+        if (starty == 0 or stopy == 0) and (
+                (startx >= 0 and startx < 4) or stopx < 4):
             if isinstance(a, self.dtype):
                 if self.retrieve_first_4_pixels:
                     a = self._4px[myitem[0].start, startx]
@@ -304,22 +295,21 @@ class DCIMGFile(object):
                     a = 0
                 return a
 
-            stepx = myitem[-1].step
-            if stepx is None:
-                stepx = 1
-
             if startx < stopx:
                 newstartx = 0
-                newstopx = 4 if stopx > 4 else stopx
+                if stopx > 4:
+                    newstopx = 4 // abs(stepx)
+                else:
+                    newstopx = stopx // abs(stepx)
             else:
                 newstopx = a.shape[-1]
-                newstartx = 0 if a.shape[-1] < 4 else a.shape[-1] - 4
+                if a.shape[-1] < 4:
+                    newstartx = 0
+                else:
+                    newstartx = (a.shape[-1] - 4 // abs(stepx))
 
             if newstartx == newstopx:
                 return np.empty([0])
-
-            newstartx //= abs(stepx)
-            newstopx //= abs(stepx)
 
             newshape = [math.ceil(
                 (myitem[i].stop - myitem[i].start) / myitem[i].step)
@@ -340,7 +330,8 @@ class DCIMGFile(object):
                 _range = sorted((startx, stopx))
                 _4start = max(0, _range[0])
                 _4stop = min(4, _range[1])
-                _4px = self._4px[myitem[0], _4start:_4stop:abs(stepx)]
+                _4px = self._4px[item[0], _4start:_4stop:abs(stepx)]
+
                 if stepx < 0:
                     _4px = _4px[..., ::-1]
                 a[a_index_exp] = _4px
