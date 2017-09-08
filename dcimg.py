@@ -64,7 +64,6 @@ class DCIMGFile(object):
         self.file = None
         self._file_header = None
         self._sess_header = None
-        self.dtype = None
         self.file_name = file_name
 
         self.first_4px_correction_enabled = True
@@ -105,6 +104,13 @@ class DCIMGFile(object):
     def byte_depth(self):
         """Number of bytes per pixel."""
         return self._sess_header['byte_depth'][0]
+
+    @property
+    def dtype(self):
+        if self.byte_depth == 1:
+            return np.uint8
+        elif self.byte_depth == 2:
+            return np.uint16
 
     @property
     def xsize(self):
@@ -212,11 +218,7 @@ class DCIMGFile(object):
         self._sess_header = np.fromstring(self.mm[index_from:index_to],
                                           dtype=self.SESS_HDR_DTYPE)
 
-        if self.byte_depth == 1:
-            self.dtype = np.uint8
-        elif self.byte_depth == 2:
-            self.dtype = np.uint16
-        else:
+        if self.byte_depth != 1 and self.byte_depth != 2:
             raise ValueError(
                 "Invalid byte-depth: {}".format(self.byte_depth))
 
