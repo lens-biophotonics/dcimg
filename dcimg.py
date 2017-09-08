@@ -232,6 +232,17 @@ class DCIMGFile(object):
     def __getitem__(self, item, copy=False):
         a = self.mma[item]
 
+        if self.deep_copy_enabled is None:
+            deepcopy = copy
+        else:
+            deepcopy = self.deep_copy_enabled
+
+        if deepcopy:
+            a = np.copy(a)
+
+        if self.retrieve_first_4_pixels is None:
+            return a
+
         # ensure item is a tuple
         item = np.index_exp[item]
 
@@ -253,13 +264,6 @@ class DCIMGFile(object):
         for _ in range(0, 3 - len(myitem)):
             myitem.append(slice(0, self.shape[len(myitem)], 1))
 
-        if self.deep_copy_enabled is None:
-            deepcopy = copy
-        else:
-            deepcopy = self.deep_copy_enabled
-
-        if deepcopy:
-            a = np.copy(a)
 
         startx = myitem[-1].start
         if startx is None:
