@@ -87,6 +87,7 @@ class DCIMGFile(object):
         self.close()
 
     def __enter__(self):
+        self.deep_copy_enabled = True
         return self
 
     def __exit__(self, *args):
