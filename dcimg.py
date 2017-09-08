@@ -255,37 +255,44 @@ class DCIMGFile(object):
                 for _ in range(0, 3 - len(item) + 1):
                     myitem.append(slice(0, self.shape[len(myitem)], 1))
             elif isinstance(i, slice):
-                if i.step is None:
-                    i = slice(i.start, i.stop, 1)
-                myitem.append(i)
+                step = i.step if i.step is not None else 1
+
+                start = i.start
+                if start is None:
+                    start = 0 if step > 0 else self.shape[len(myitem)]
+
+                stop = i.stop
+                if stop is None:
+                    stop = self.shape[len(myitem)] if step > 0 else 0
+
+                myitem.append(slice(start, stop, step))
             else:
                 raise TypeError("Invalid type: {}".format(type(i)))
 
         for _ in range(0, 3 - len(myitem)):
             myitem.append(slice(0, self.shape[len(myitem)], 1))
 
-
         startx = myitem[-1].start
         if startx is None:
-            startx = 0
+            startx = 0 if myitem[-1].step > 0 else self.shape[-1]
         elif startx < 0:
             startx += self.shape[-1]
 
         stopx = myitem[-1].stop
         if stopx is None:
-            stopx = self.shape[-1]
+            stopx = self.shape[-1] if myitem[-1].step > 0 else 0
         elif stopx < 0:
             stopx += self.shape[-1] + 1
 
         starty = myitem[-2].start
         if starty is None:
-            starty = 0
+            starty = 0 if myitem[-2].step > 0 else self.shape[-2]
         elif starty < 0:
             starty += self.shape[-2]
 
         stopy = myitem[-2].stop
         if stopy is None:
-            stopy = self.shape[-2]
+            stopy = self.shape[-2] if myitem[-2].step > 0 else 0
         elif stopy < 0:
             stopy += self.shape[-2] + 1
 
