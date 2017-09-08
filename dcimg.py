@@ -62,8 +62,8 @@ class DCIMGFile(object):
 
         self.fileno = None  #: file descriptor
         self.file = None
-        self.file_header = None
-        self.sess_header = None
+        self._file_header = None
+        self._sess_header = None
         self.dtype = None
         self.file_name = file_name
 
@@ -95,32 +95,32 @@ class DCIMGFile(object):
 
     @property
     def file_size(self):
-        return self.file_header['file_size'][0]
+        return self._file_header['file_size'][0]
 
     @property
     def nfrms(self):
-        return self.sess_header['nfrms'][0]
+        return self._sess_header['nfrms'][0]
 
     @property
     def byte_depth(self):
         """Number of bytes per pixel."""
-        return self.sess_header['byte_depth'][0]
+        return self._sess_header['byte_depth'][0]
 
     @property
     def xsize(self):
-        return self.sess_header['xsize'][0]
+        return self._sess_header['xsize'][0]
 
     @property
     def ysize(self):
-        return self.sess_header['ysize'][0]
+        return self._sess_header['ysize'][0]
 
     @property
     def bytes_per_row(self):
-        return self.sess_header['bytes_per_row'][0]
+        return self._sess_header['bytes_per_row'][0]
 
     @property
     def bytes_per_img(self):
-        return self.sess_header['bytes_per_img'][0]
+        return self._sess_header['bytes_per_img'][0]
 
     @property
     def shape(self):
@@ -134,22 +134,23 @@ class DCIMGFile(object):
         return (self.nfrms, self.ysize, self.xsize)
 
     @property
-    def header_size(self):
-        return self.file_header['header_size'][0]
+    def _header_size(self):
+        return self._file_header['header_size'][0]
 
     @property
-    def session_footer_offset(self):
-        return int(self.header_size + self.sess_header['session_data_size'][0])
+    def _session_footer_offset(self):
+        return int(
+            self._header_size + self._sess_header['session_data_size'][0])
 
     @property
-    def timestamp_offset(self):
-        return int(self.session_footer_offset + 272 + 4 * self.nfrms)
+    def _timestamp_offset(self):
+        return int(self._session_footer_offset + 272 + 4 * self.nfrms)
 
     @property
     def timestamps(self):
         """A numpy array with frame timestamps."""
         ts = np.zeros(self.nfrms)
-        index = self.timestamp_offset
+        index = self._timestamp_offset
         for i in range(0, self.nfrms):
             whole = int.from_bytes(self.mm[index:index + 4], 'little')
             index += 4
@@ -183,7 +184,7 @@ class DCIMGFile(object):
             self.close()
             raise
 
-        offset = (self.session_footer_offset + 272
+        offset = (self._session_footer_offset + 272
                   + self.nfrms * (4 + 8))  # 4: frame count, 8: timestamp
         self._4px = np.ndarray((self.nfrms, 4), self.dtype, self.mm, offset)
 
@@ -200,16 +201,16 @@ class DCIMGFile(object):
 
     def _parse_header(self):
         data = self.mm[0:np.dtype(self.FILE_HDR_DTYPE).itemsize]
-        self.file_header = np.fromstring(data, dtype=self.FILE_HDR_DTYPE)
+        self._file_header = np.fromstring(data, dtype=self.FILE_HDR_DTYPE)
 
-        if not self.file_header['file_format'] == b'DCIMG':
+        if not self._file_header['file_format'] == b'DCIMG':
             raise ValueError('Invalid DCIMG file')
 
-        self.sess_header = np.zeros(1, dtype=self.SESS_HDR_DTYPE)
-        index_from = self.header_size
-        index_to = index_from + self.sess_header.nbytes
-        self.sess_header = np.fromstring(self.mm[index_from:index_to],
-                                         dtype=self.SESS_HDR_DTYPE)
+        self._sess_header = np.zeros(1, dtype=self.SESS_HDR_DTYPE)
+        index_from = self._header_size
+        index_to = index_from + self._sess_header.nbytes
+        self._sess_header = np.fromstring(self.mm[index_from:index_to],
+                                          dtype=self.SESS_HDR_DTYPE)
 
         if self.byte_depth == 1:
             self.dtype = np.uint8

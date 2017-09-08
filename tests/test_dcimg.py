@@ -50,10 +50,10 @@ class TestDCIMGFILE(unittest.TestCase):
         f = DCIMGFile()
 
         f.dtype = np.uint16
-        f.sess_header = np.zeros(1, dtype=f.SESS_HDR_DTYPE)
-        f.sess_header['nfrms'][0] = 10
-        f.sess_header['ysize'][0] = 20
-        f.sess_header['xsize'][0] = 20
+        f._sess_header = np.zeros(1, dtype=f.SESS_HDR_DTYPE)
+        f._sess_header['nfrms'][0] = 10
+        f._sess_header['ysize'][0] = 20
+        f._sess_header['xsize'][0] = 20
         f.mma = np.arange(np.prod(f.shape), dtype=np.uint16).reshape(f.shape)
 
         f._4px = (65535 - np.arange(f.nfrms * 4)).reshape((f.nfrms, 4))
