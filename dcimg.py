@@ -248,7 +248,10 @@ class DCIMGFile(object):
             return a
 
         # ensure item is a tuple
-        item = np.index_exp[item]
+        if isinstance(item, list):
+            item = tuple(item)
+        else:
+            item = np.index_exp[item]
 
         # ensure all items are slice objects
         myitem = []
