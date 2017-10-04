@@ -11,12 +11,7 @@ import mmap
 
 import numpy as np
 
-_major = 0
-_minor = 3
-_micro = 0
-
-__version__ = '{major}.{minor}.{micro}'.format(major=_major, minor=_minor,
-                                               micro=_micro)
+__version__ = '0.3.0'
 
 
 class DCIMGFile(object):

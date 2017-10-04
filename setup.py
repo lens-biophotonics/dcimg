@@ -1,10 +1,22 @@
+import re
+
 from setuptools import setup
 
-from dcimg import __version__
+
+def get_version():
+    VERSIONFILE = 'dcimg.py'
+    initfile_lines = open(VERSIONFILE, 'rt').readlines()
+    VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+    for line in initfile_lines:
+        mo = re.search(VSRE, line, re.M)
+        if mo:
+            return mo.group(1)
+    raise RuntimeError('Unable to find version string in %s.' % (VERSIONFILE,))
+
 
 setup(
     name='dcimg',
-    version=__version__,
+    version=get_version(),
     description='Python module to read Hamamatsu DCIMG files',
     long_description='Python module to read Hamamatsu DCIMG files',
     url='',
