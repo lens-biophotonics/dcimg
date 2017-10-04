@@ -67,7 +67,7 @@ class TestDCIMGFILE(unittest.TestCase):
 
     @data(*test_vectors)
     def testGetItem(self, value):
-        self.f.retrieve_first_4_pixels = True
+        self.f.first_4px_correction_enabled = True
         a = self.f[value]
         self.assertEqual(np.array_equal(self.a_ok[value], a), True)
 

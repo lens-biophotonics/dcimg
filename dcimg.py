@@ -67,7 +67,7 @@ class DCIMGFile(object):
         self.dtype = None
         self.file_name = file_name
 
-        self.retrieve_first_4_pixels = True
+        self.first_4px_correction_enabled = True
         """For some reason, the first 4 pixels of each frame are stored in a
         different area in the file. This switch enables retrieving those 4
         pixels. If False, those pixels are set to 0. Defaults to True."""
@@ -240,7 +240,7 @@ class DCIMGFile(object):
         if deepcopy:
             a = np.copy(a)
 
-        if self.retrieve_first_4_pixels is None:
+        if self.first_4px_correction_enabled is None:
             return a
 
         # ensure item is a tuple
@@ -289,7 +289,7 @@ class DCIMGFile(object):
         if (starty == 0 or stopy == 0) and (
                 (startx >= 0 and startx < 4) or stopx < 4):
             if isinstance(a, self.dtype):
-                if self.retrieve_first_4_pixels:
+                if self.first_4px_correction_enabled:
                     a = self._4px[myitem[0].start, startx]
                 else:
                     a = 0
@@ -326,7 +326,7 @@ class DCIMGFile(object):
 
             a_index_exp = np.index_exp[..., newy, newstartx:newstopx]
 
-            if self.retrieve_first_4_pixels:
+            if self.first_4px_correction_enabled:
                 _range = sorted((startx, stopx))
                 _4start = max(0, _range[0])
                 _4stop = min(4, _range[1])
