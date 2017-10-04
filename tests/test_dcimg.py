@@ -66,24 +66,10 @@ class TestDCIMGFILE(unittest.TestCase):
         cls.a_ok = a_ok
 
     @data(*test_vectors)
-    def testGetItemCorrectionTrue(self, value):
+    def testGetItem(self, value):
         self.f.retrieve_first_4_pixels = True
         a = self.f[value]
         self.assertEqual(np.array_equal(self.a_ok[value], a), True)
-
-    @data(*test_vectors)
-    def testGetItemCorrectionNone(self, value):
-        self.f.retrieve_first_4_pixels = None
-        a = self.f[value]
-        self.assertEqual(np.array_equal(self.f.mma[value], a), True)
-
-    @data(*test_vectors)
-    def testGetItemCorrectionFalse(self, value):
-        self.f.retrieve_first_4_pixels = False
-        a_ok = np.copy(self.f.mma)
-        a = self.f[value]
-        a_ok[:, 0, 0:4] = 0
-        self.assertEqual(np.array_equal(a_ok[value], a), True)
 
 
 if __name__ == '__main__':
