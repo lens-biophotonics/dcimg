@@ -19,6 +19,11 @@ test_vectors = [
     np.index_exp[-4:-7:-1, 0, 0],
     np.index_exp[-6:-4, 0, 0],
     np.index_exp[2:4, 0:4, 0:4],
+    np.index_exp[..., 2:],
+    np.index_exp[..., -18:-16],
+    np.index_exp[..., -19:-17],
+    np.index_exp[..., -17:-19],
+    np.index_exp[..., -19::2],
     np.index_exp[2:4, 0:10, 0:10],
     np.index_exp[2:4, 7:10, 7:10],
     np.index_exp[2, 0, -2],
@@ -72,7 +77,10 @@ class TestDCIMGFILE(unittest.TestCase):
     def testGetItem(self, value):
         self.f.first_4px_correction_enabled = True
         a = self.f[value]
-        self.assertEqual(np.array_equal(self.a_ok[value], a), True)
+        if a.size == 0:
+            self.assertEqual(a.size, self.a_ok[value].size)
+        else:
+            self.assertEqual(np.array_equal(self.a_ok[value], a), True)
 
 
 if __name__ == '__main__':

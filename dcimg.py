@@ -305,9 +305,9 @@ class DCIMGFile(object):
             if startx < stopx:
                 newstartx = 0
                 if stopx > 4:
-                    newstopx = 4 // abs(stepx)
+                    newstopx = int(math.ceil((4 - startx) / abs(stepx)))
                 else:
-                    newstopx = stopx // abs(stepx)
+                    newstopx = (stopx - startx) // abs(stepx)
             else:
                 newstopx = a.shape[-1]
                 if a.shape[-1] < 4:
