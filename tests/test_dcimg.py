@@ -47,6 +47,8 @@ test_vectors = [
     np.index_exp[:5],
     np.index_exp[:50],
     np.index_exp[:50, :50, :50],
+    np.index_exp[:, 0:0:1, :],
+    np.index_exp[..., 0:0:1],
 ]
 
 

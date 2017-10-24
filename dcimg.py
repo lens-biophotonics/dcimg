@@ -242,6 +242,9 @@ class DCIMGFile(object):
         if self.first_4px_correction_enabled is None:
             return a
 
+        if a.size == 0:
+            return a
+
         # ensure item is a tuple
         if isinstance(item, list):
             item = tuple(item)
