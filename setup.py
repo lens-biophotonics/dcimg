@@ -61,6 +61,13 @@ setup(
     # for example:
     # $ pip install -e .[dev,test]
     extras_require={
-        'dev': ['pip-tools'],
+        'dev': [
+            'pip-tools',
+        ],
+        'doc': [
+            'numpydoc',
+            'sphinx',
+            'sphinx_rtd_theme',
+        ]
     },
 )

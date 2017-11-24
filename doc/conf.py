@@ -120,6 +120,7 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'dcimgdoc'
 
+highlight_language = 'python3'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -174,7 +175,12 @@ texinfo_documents = [
 from sphinx.ext.autodoc import (
     ClassLevelDocumenter, InstanceAttributeDocumenter)
 
+
 def iad_add_directive_header(self, sig):
     ClassLevelDocumenter.add_directive_header(self, sig)
 
 InstanceAttributeDocumenter.add_directive_header = iad_add_directive_header
+
+
+def setup(app):
+    app.add_javascript('https://docs.python.org/3/_static/copybutton.js')

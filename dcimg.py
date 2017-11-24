@@ -6,6 +6,9 @@
 
 # Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>
 
+"""This module provides the `DCIMGFile` class for accessing Hamamatsu DCIMG
+files."""
+
 import math
 import mmap
 
@@ -17,7 +20,35 @@ __version__ = '0.3.0'
 class DCIMGFile(object):
     """A DCIMG file (Hamamatsu format), memory-mapped.
 
-    After use, call the close() method to release resources properly.
+    This class provides an interface for reading 3D Hamamatsu DCIMG files.
+
+    Usage is pretty straightforward. First of all, create a `DCIMGFile` object:
+
+    >>> my_file = DCIMGFile('input_file.dcimg')
+    >>> my_file
+    <DCIMGFile shape=2450x2048x2048 dtype=<class 'numpy.uint16'>\
+file_name=input_file.dcimg>
+
+    Image data can then be accessed using NumPy's basic indexing:
+
+    >>> my_file[-10, :5, :5]
+    array([[101, 104, 100,  99,  89],
+           [103, 102, 103,  99, 102],
+           [101, 104,  99, 108,  98],
+           [102, 111,  99, 111,  95],
+           [103,  98,  99, 104, 106]], dtype=uint16)
+
+    Other convenience methods for accessing image data are: `zslice`,
+    `zslice_idx`, `frame` and `whole`.
+
+    `DCIMGFile` supports context managers:
+
+    >>> with DCIMGFile('input_file.dcimg') as f:
+    >>>     a = f[800, ...]
+
+
+    .. seealso:: NumPy's basic indexing: `numpy:arrays.indexing`
+
     """
 
     FILE_HDR_DTYPE = [
@@ -50,10 +81,11 @@ class DCIMGFile(object):
 
     def __init__(self, file_name=None):
         self.mm = None
-        """a `mmap.mmap` object"""
+        """a `mmap.mmap` object with the raw contents of the DCIMG file."""
         self.mma = None
-        """memory-mapped `numpy.ndarray`"""
-        self.deep_copy_enabled = None
+        """memory-mapped `numpy.ndarray` of the image data, without 4px
+        correction."""
+        self._deep_copy_enabled = None
 
         self.fileno = None  #: file descriptor
         self.file = None
@@ -64,7 +96,8 @@ class DCIMGFile(object):
         self.first_4px_correction_enabled = True
         """For some reason, the first 4 pixels of each frame are stored in a
         different area in the file. This switch enables retrieving those 4
-        pixels. If False, those pixels are set to 0. Defaults to True."""
+        pixels. If False, those pixels are set to 0. If None, they are left
+        unchanged. Defaults to True."""
 
         self._4px = None
         """A `numpy.ndarray` of shape (`nfrms`, 4) containing the first 4
@@ -89,10 +122,12 @@ class DCIMGFile(object):
 
     @property
     def file_size(self):
+        """File size in bytes."""
         return self._file_header['file_size'][0]
 
     @property
     def nfrms(self):
+        """Number of frames (Z planes), same as `zsize`."""
         return self._sess_header['nfrms'][0]
 
     @property
@@ -102,6 +137,7 @@ class DCIMGFile(object):
 
     @property
     def dtype(self):
+        """NumPy numerical dtype."""
         if self.byte_depth == 1:
             return np.uint8
         elif self.byte_depth == 2:
@@ -147,9 +183,15 @@ class DCIMGFile(object):
     def _timestamp_offset(self):
         return int(self._session_footer_offset + 272 + 4 * self.nfrms)
 
-    @property
     def timestamps(self):
-        """A numpy array with frame timestamps."""
+        """Get frame timestamps.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            A numpy array of dtype `numpy.float64` with frame timestamps in
+            Unix time plus a fractional part.
+        """
         ts = np.zeros(self.nfrms)
         index = self._timestamp_offset
         for i in range(0, self.nfrms):
@@ -229,6 +271,7 @@ class DCIMGFile(object):
             raise ValueError(e_str)
 
     def __getitem__(self, item, copy=False):
+        """Allow to access image data using NumPy's basic indexing."""
         a = self.mma[item]
 
         if self.deep_copy_enabled is None:
