@@ -282,14 +282,14 @@ file_name=input_file.dcimg>
                     "bytes_per_row ({bytes_per_row})".format(**vars(self))
             raise ValueError(e_str)
 
-    def __getitem__(self, item, copy=False):
+    def __getitem__(self, item, copy=None):
         """Allow to access image data using NumPy's basic indexing."""
         a = self.mma[item]
 
-        if self.deep_copy_enabled is None:
-            deepcopy = copy
-        else:
+        if copy is None:
             deepcopy = self.deep_copy_enabled
+        else:
+            deepcopy = copy
 
         if deepcopy:
             a = np.copy(a)
