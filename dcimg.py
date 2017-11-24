@@ -121,6 +121,14 @@ file_name=input_file.dcimg>
         self.close()
 
     @property
+    def deep_copy_enabled(self):
+        return self._deep_copy_enabled
+
+    @deep_copy_enabled.setter
+    def deep_copy_enabled(self, value):
+        self._deep_copy_enabled = value
+
+    @property
     def file_size(self):
         """File size in bytes."""
         return self._file_header['file_size'][0]
@@ -152,6 +160,10 @@ file_name=input_file.dcimg>
         return self._sess_header['ysize'][0]
 
     @property
+    def zsize(self):
+        return self.nfrms
+
+    @property
     def bytes_per_row(self):
         return self._sess_header['bytes_per_row'][0]
 
@@ -166,7 +178,7 @@ file_name=input_file.dcimg>
         Returns
         -------
         tuple
-            (`nfrms`, `ysize`, `xsize`)
+            (`zsize`, `ysize`, `xsize`)
         """
         return (self.nfrms, self.ysize, self.xsize)
 
