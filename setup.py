@@ -64,6 +64,9 @@ setup(
         'dev': [
             'pip-tools',
         ],
+        'test': [
+            'ddt',
+        ],
         'doc': [
             'numpydoc',
             'sphinx',

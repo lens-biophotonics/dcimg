@@ -84,6 +84,14 @@ class TestDCIMGFILE(unittest.TestCase):
         else:
             self.assertEqual(np.array_equal(self.a_ok[value], a), True)
 
+    def testZSlice(self):
+        a = self.f.zslice(3, 5)
+        self.assertEqual(np.array_equal(self.a_ok[3:5], a), True)
+
+    def testWhole(self):
+        a = self.f.whole()
+        self.assertEqual(np.array_equal(self.a_ok, a), True)
+
 
 if __name__ == '__main__':
     unittest.main()
