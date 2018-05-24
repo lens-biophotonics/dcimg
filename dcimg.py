@@ -75,9 +75,27 @@ file_name=input_file.dcimg>
         ('ysize', '<u4'),
         ('bytes_per_img', '<u4'),
         ('skip3', '2<u4'),
-        ('header_size', '1<u4'),
+        ('offset_to_data', '1<u4'),
         ('session_data_size', '<u8'),  # header_size + x*y*byte_depth*nfrms
     ]
+
+    # newer versions of the dcimg format have a different header
+    NEW_SESSION_HEADER_DTYPE = [
+        ('session_size', '<u8'),
+        ('skip1', '13<u4'),
+        ('nfrms', '<u4'),
+        ('byte_depth', '<u4'),
+        ('skip2', '<u4'),
+        ('xsize', '<u4'),
+        ('ysize', '<u4'),
+        ('bytes_per_row', '<u4'),
+        ('bytes_per_img', '<u4'),
+        ('skip3', '2<u4'),
+        ('offset_to_data', '<u8'),
+    ]
+
+    FMT_OLD = 1
+    FMT_NEW = 2
 
     def __init__(self, file_name=None):
         self.mm = None
@@ -92,12 +110,14 @@ file_name=input_file.dcimg>
         self._file_header = None
         self._sess_header = None
         self.file_name = file_name
+        self.fmt_version = None
 
         self.first_4px_correction_enabled = True
-        """For some reason, the first 4 pixels of each frame are stored in a
-        different area in the file. This switch enables retrieving those 4
-        pixels. If False, those pixels are set to 0. If None, they are left
-        unchanged. Defaults to True."""
+        """For some reason, the first 4 pixels of each frame (or the first 4
+        pixels of line number 1023 of each frame) are stored in a different
+        area in the file. This switch enables retrieving those 4 pixels. If
+        False, those pixels are set to 0. If None, they are left unchanged.
+        Defaults to True."""
 
         self._4px = None
         """A `numpy.ndarray` of shape (`nfrms`, 4) containing the first 4
@@ -188,8 +208,13 @@ file_name=input_file.dcimg>
 
     @property
     def _session_footer_offset(self):
-        return int(
-            self._header_size + self._sess_header['session_data_size'][0])
+        try:
+            sess_data_size = int(self._sess_header['session_data_size'][0])
+        except ValueError:
+            sess_data_size = self._sess_header['offset_to_data'][0] + (int(
+                self._sess_header['bytes_per_img'][0] + 8)
+                              * self.nfrms)
+        return self._header_size + sess_data_size
 
     @property
     def _timestamp_offset(self):
@@ -239,12 +264,28 @@ file_name=input_file.dcimg>
             self.close()
             raise
 
-        offset = (self._session_footer_offset + 272
-                  + self.nfrms * (4 + 8))  # 4: frame count, 8: timestamp
-        self._4px = np.ndarray((self.nfrms, 4), self.dtype, self.mm, offset)
+        if self.fmt_version == self.FMT_OLD:
+            offset = (self._session_footer_offset + 272
+                      + self.nfrms * (4 + 8))  # 4: frame count, 8: timestamp
+            self._4px = np.ndarray((self.nfrms, 4), self.dtype, self.mm, offset)
 
-        offset = 232
-        self.mma = np.ndarray(self.shape, self.dtype, self.mm, offset)
+        offset = int(self._file_header['header_size']
+                     + self._sess_header['offset_to_data'][0])
+        strides = None
+        if self.fmt_version == self.FMT_NEW:
+            bd = self.byte_depth
+            strides = (self.bytes_per_img + 32, bd)
+            self._4px = np.ndarray((self.nfrms, 4), self.dtype, self.mm,
+                                   offset + self.bytes_per_img + 12,
+                                   strides)
+
+            strides = np.array([
+                self.ysize * self.xsize,
+                self.xsize,
+                1
+            ]) * bd
+            strides[0] += 32
+        self.mma = np.ndarray(self.shape, self.dtype, self.mm, offset, strides)
 
     def close(self):
         if self.mm is not None:
@@ -261,11 +302,21 @@ file_name=input_file.dcimg>
         if not self._file_header['file_format'] == b'DCIMG':
             raise ValueError('Invalid DCIMG file')
 
-        self._sess_header = np.zeros(1, dtype=self.SESS_HDR_DTYPE)
+        if self._file_header['format_version'] == 0x7:
+            sess_dtype = self.SESS_HDR_DTYPE
+            self.fmt_version = self.FMT_OLD
+        elif self._file_header['format_version'] == 0x1000000:
+            self.fmt_version = self.FMT_NEW
+            sess_dtype = self.NEW_SESSION_HEADER_DTYPE
+        else:
+            raise ValueError('Invalid DCIMG format version: 0x{:04x}'.format(
+                self._file_header['format_version'][0]))
+
+        self._sess_header = np.zeros(1, dtype=sess_dtype)
         index_from = self._header_size
         index_to = index_from + self._sess_header.nbytes
         self._sess_header = np.fromstring(self.mm[index_from:index_to],
-                                          dtype=self.SESS_HDR_DTYPE)
+                                          dtype=sess_dtype)
 
         if self.byte_depth != 1 and self.byte_depth != 2:
             raise ValueError(
@@ -350,9 +401,17 @@ file_name=input_file.dcimg>
 
         starty = myitem[1].start
         stopy = myitem[1].stop
+        stepy = myitem[1].step
 
-        if (starty == 0 or stopy == 0) and (
-                (startx >= 0 and startx < 4) or stopx < 4):
+        if self.fmt_version == self.FMT_OLD:
+            condition_y = starty == 0 or stopy == 0
+        elif self.fmt_version == self.FMT_NEW:
+            if stepy > 0:
+                condition_y = starty <= 1023 and stopy >= 1023
+            elif stepy < 0:
+                condition_y = stopy <= 1023 and starty >= 1023
+
+        if condition_y and ((startx >= 0 and startx < 4) or stopx < 4):
             if isinstance(a, self.dtype):
                 if self.first_4px_correction_enabled:
                     a = self._4px[myitem[0].start, startx]
@@ -384,10 +443,14 @@ file_name=input_file.dcimg>
 
             a.shape = newshape
 
-            if starty < stopy:
-                newy = 0
+            if self.fmt_version == DCIMGFile.FMT_OLD:
+                target_line = 0
             else:
-                newy = -1
+                target_line = 1023
+
+            newy = int(math.floor((target_line - starty) / stepy))
+            if stepy < 0:
+                newy -= 1
 
             a_index_exp = np.index_exp[..., newy, newstartx:newstopx]
 

@@ -51,6 +51,7 @@ test_vectors = [
     np.index_exp[:5],
     np.index_exp[:50],
     np.index_exp[:50, :50, :50],
+    np.index_exp[:3000, :3000, :3000],
     np.index_exp[:, 0:0:1, :],
     np.index_exp[..., 0:0:1],
 ]
@@ -61,40 +62,70 @@ class TestDCIMGFILE(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        nfrms = 10
+        _sess_header = np.zeros(1, dtype=DCIMGFile.SESS_HDR_DTYPE)
+        _sess_header['nfrms'][0] = nfrms
+        _sess_header['ysize'][0] = 2048
+        _sess_header['xsize'][0] = 2048
+        _sess_header['byte_depth'][0] = 2
+
+        _4px = (65000 - np.arange(nfrms * 4)).reshape((nfrms, 4))
+
         f = DCIMGFile()
-
-        f._sess_header = np.zeros(1, dtype=f.SESS_HDR_DTYPE)
-        f._sess_header['nfrms'][0] = 10
-        f._sess_header['ysize'][0] = 20
-        f._sess_header['xsize'][0] = 20
-        f._sess_header['byte_depth'][0] = 2
+        f._sess_header = np.copy(_sess_header)
         f.mma = np.arange(np.prod(f.shape), dtype=np.uint16).reshape(f.shape)
-
-        f._4px = (65535 - np.arange(f.nfrms * 4)).reshape((f.nfrms, 4))
+        f.mma.flags.writeable = False
+        f.deep_copy_enabled = True
+        f.first_4px_correction_enabled = True
+        f.fmt_version = DCIMGFile.FMT_OLD
+        f._4px = np.copy(_4px)
+        f._4px.flags.writeable = False
 
         cls.f = f
 
-        a_ok = np.copy(f.mma)
-        a_ok[:, 0, 0:4] = f._4px
+        f = DCIMGFile()
+        f._sess_header = np.copy(_sess_header)
+        f.mma = np.arange(np.prod(f.shape), dtype=np.uint16).reshape(f.shape)
+        f.mma.flags.writeable = False
+        f.deep_copy_enabled = True
+        f.first_4px_correction_enabled = True
+        f.fmt_version = DCIMGFile.FMT_NEW
+        f._4px = np.copy(_4px)
+        f._4px.flags.writeable = False
 
-        cls.a_ok = a_ok
+        cls.f_new = f
+
+        a_ok = np.copy(cls.f.mma)
+        a_ok[:, 0, 0:4] = f._4px
+        cls.a_ok = np.copy(a_ok)
+        cls.a_ok.flags.writeable = False
+
+        a_ok = np.copy(cls.f_new.mma)
+        a_ok[:, 1023, 0:4] = cls.f_new._4px
+        cls.a_ok_new = np.copy(a_ok)
+        cls.a_ok_new.flags.writeable = False
+
+        cls.test_config = list(zip([cls.f, cls.f_new],
+                                   [cls.a_ok, cls.a_ok_new]))
 
     @data(*test_vectors)
     def testGetItem(self, value):
-        self.f.first_4px_correction_enabled = True
-        a = self.f[value]
-        if a.size == 0:
-            self.assertEqual(a.size, self.a_ok[value].size)
-        else:
-            self.assertEqual(np.array_equal(self.a_ok[value], a), True)
+        for f, a_ok in self.test_config:
+            a = f[value]
+            if a.size == 0:
+                self.assertEqual(a.size, a_ok[value].size)
+            else:
+                self.assertEqual(np.array_equal(a_ok[value], a), True)
 
     def testZSlice(self):
-        a = self.f.zslice(3, 5)
-        self.assertEqual(np.array_equal(self.a_ok[3:5], a), True)
+        for f, a_ok in self.test_config:
+            a = f.zslice(3, 5)
+            self.assertEqual(np.array_equal(a_ok[3:5], a), True)
 
     def testWhole(self):
-        a = self.f.whole()
-        self.assertEqual(np.array_equal(self.a_ok, a), True)
+        for f, a_ok in self.test_config:
+            a = f.whole()
+            self.assertEqual(np.array_equal(a_ok, a), True)
 
 
 if __name__ == '__main__':
