@@ -94,6 +94,14 @@ file_name=input_file.dcimg>
         ('offset_to_data', '<u8'),
     ]
 
+    NEW_FRAME_FOOTER_DTYPE = [
+        ('progressive_number', '<u4'),
+        ('timestamp', '<u4'),
+        ('timestamp_frac', '<u4'),
+        ('4px', '<u8'),
+        ('zeros', '<u12'),
+    ]
+
     FMT_OLD = 1
     FMT_NEW = 2
 
@@ -216,10 +224,6 @@ file_name=input_file.dcimg>
                               * self.nfrms)
         return self._header_size + sess_data_size
 
-    @property
-    def _timestamp_offset(self):
-        return int(self._session_footer_offset + 272 + 4 * self.nfrms)
-
     def timestamps(self):
         """Get frame timestamps.
 
@@ -230,13 +234,22 @@ file_name=input_file.dcimg>
             Unix time plus a fractional part.
         """
         ts = np.zeros(self.nfrms)
-        index = self._timestamp_offset
-        for i in range(0, self.nfrms):
-            whole = int.from_bytes(self.mm[index:index + 4], 'little')
-            index += 4
+        if self.fmt_version == DCIMGFile.FMT_OLD:
+            # timestamp offset
+            offset = int(self._session_footer_offset + 272 + 4 * self.nfrms)
+            data = np.ndarray((self.nfrms, 2), np.uint32, self.mm, offset)
+        elif self.fmt_version == DCIMGFile.FMT_NEW:
+            offset = int(self._file_header['header_size']
+                         + self._sess_header['offset_to_data'][0]
+                         + self.bytes_per_img + 4)
+            strides = (self.bytes_per_img + 32, 4)
+            data = np.ndarray((self.nfrms, 2), np.uint32, self.mm,
+                              offset, strides)
 
-            fraction = int.from_bytes(self.mm[index:index + 4], 'little')
-            index += 4
+        for i in range(0, self.nfrms):
+            whole = int.from_bytes(data[i, 0], 'little')
+
+            fraction = int.from_bytes(data[i, 1], 'little')
 
             val = whole
             if fraction != 0:
