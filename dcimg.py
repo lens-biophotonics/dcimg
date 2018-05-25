@@ -208,7 +208,7 @@ file_name=input_file.dcimg>
         tuple
             (`zsize`, `ysize`, `xsize`)
         """
-        return (self.nfrms, self.ysize, self.xsize)
+        return self.nfrms, self.ysize, self.xsize
 
     @property
     def _header_size(self):
