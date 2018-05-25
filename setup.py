@@ -19,7 +19,7 @@ setup(
     version=get_version(),
     description='Python module to read Hamamatsu DCIMG files',
     long_description='Python module to read Hamamatsu DCIMG files',
-    url='',
+    url='https://github.com/lens-biophotonics/dcimg',
 
     # Author details
     author='Giacomo Mazzamuto',
