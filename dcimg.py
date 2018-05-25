@@ -1,4 +1,4 @@
-# Based on:
+# Based on information gathered from:
 # https://github.com/StuartLittlefair/dcimg/blob/master/dcimg/Raw.py
 # hamamatsuOrcaTools: https://github.com/orlandi/hamamatsuOrcaTools
 # Python Microscopy: http://www.python-microscopy.org
