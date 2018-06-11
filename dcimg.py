@@ -11,8 +11,12 @@ files."""
 
 import math
 import mmap
+import logging
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 __version__ = '0.5.0'
 
@@ -258,11 +262,13 @@ file_name=input_file.dcimg>
                                    offset + self.bytes_per_img + 12,
                                    strides)
 
-            strides = np.array([
-                self.ysize * self.xsize,
-                self.xsize,
-                1
-            ]) * bd
+            padding = self.bytes_per_img - self.xsize * self.ysize * bd
+            padding //= self.ysize
+            strides = [
+                self.bytes_per_row * self.xsize,
+                self.xsize * bd + padding,
+                1 * bd
+            ]
             strides[0] += 32
         self.mma = np.ndarray(self.shape, self.dtype, self.mm, offset, strides)
 
@@ -314,11 +320,13 @@ file_name=input_file.dcimg>
             raise ValueError(
                 "Invalid byte-depth: {}".format(self.byte_depth))
 
-        if self.bytes_per_row != self.byte_depth * self.ysize:
+        expected_bytes_per_row = 256 * math.ceil(
+            self.byte_depth * self.ysize // 256 + 1)
+        if self.bytes_per_row != expected_bytes_per_row:
             e_str = "bytes_per_row ({bytes_per_row}) " \
                     "!= byte_depth ({byte_depth}) * nrows ({y_size})" \
                 .format(**vars(self))
-            raise ValueError(e_str)
+            logger.warning(e_str)
 
         if self.bytes_per_img != self.bytes_per_row * self.ysize:
             e_str = "bytes per img ({bytes_per_img}) != nrows ({y_size}) * " \
