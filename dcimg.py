@@ -117,6 +117,7 @@ file_name=input_file.dcimg>
         self.file = None
         self._file_header = None
         self._sess_header = None
+        self._ts_data = None  #: timestamp data
         self.file_name = file_name
         self.fmt_version = None
 
@@ -224,41 +225,6 @@ file_name=input_file.dcimg>
                               * self.nfrms)
         return self._header_size + sess_data_size
 
-    def timestamps(self):
-        """Get frame timestamps.
-
-        Returns
-        -------
-        `numpy.ndarray`
-            A numpy array of dtype `numpy.float64` with frame timestamps in
-            Unix time plus a fractional part.
-        """
-        ts = np.zeros(self.nfrms)
-        if self.fmt_version == DCIMGFile.FMT_OLD:
-            # timestamp offset
-            offset = int(self._session_footer_offset + 272 + 4 * self.nfrms)
-            data = np.ndarray((self.nfrms, 2), np.uint32, self.mm, offset)
-        elif self.fmt_version == DCIMGFile.FMT_NEW:
-            offset = int(self._file_header['header_size']
-                         + self._sess_header['offset_to_data'][0]
-                         + self.bytes_per_img + 4)
-            strides = (self.bytes_per_img + 32, 4)
-            data = np.ndarray((self.nfrms, 2), np.uint32, self.mm,
-                              offset, strides)
-
-        for i in range(0, self.nfrms):
-            whole = int.from_bytes(data[i, 0], 'little')
-
-            fraction = int.from_bytes(data[i, 1], 'little')
-
-            val = whole
-            if fraction != 0:
-                val += fraction * math.pow(
-                    10, -(math.floor(math.log10(fraction)) + 1))
-            ts[i] = val
-
-        return ts
-
     def open(self, file_name=None):
         self.close()
         if file_name is None:
@@ -299,6 +265,19 @@ file_name=input_file.dcimg>
             ]) * bd
             strides[0] += 32
         self.mma = np.ndarray(self.shape, self.dtype, self.mm, offset, strides)
+
+        if self.fmt_version == DCIMGFile.FMT_OLD:
+            # timestamp offset
+            offset = int(self._session_footer_offset + 272 + 4 * self.nfrms)
+            self._ts_data = np.ndarray(
+                (self.nfrms, 2), np.uint32, self.mm, offset)
+        elif self.fmt_version == DCIMGFile.FMT_NEW:
+            offset = int(self._file_header['header_size']
+                         + self._sess_header['offset_to_data'][0]
+                         + self.bytes_per_img + 4)
+            strides = (self.bytes_per_img + 32, 4)
+            self._ts_data = np.ndarray(
+                (self.nfrms, 2), np.uint32, self.mm, offset, strides)
 
     def close(self):
         if self.mm is not None:
@@ -482,6 +461,42 @@ file_name=input_file.dcimg>
             a.shape = old_shape
 
         return a
+
+    def timestamps(self):
+        """Get frame timestamps.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            A numpy array of dtype `numpy.float64` with frame timestamps in
+            Unix time plus a fractional part, of shape (`zsize`, 2).
+        """
+        ts = np.zeros((self.nfrms, 2))
+
+        for i in range(0, self.nfrms):
+            ts[i] = self.ts(i)
+
+        return ts
+
+    def ts(self, frame):
+        """
+        Timestamp of a single frame.
+
+        Parameters
+        ----------
+        frame : int
+            Frame index
+
+        Returns
+        -------
+        tuple
+            (`unix timestamp`, `fractional part`)
+
+        """
+        whole = int.from_bytes(self._ts_data[frame, 0], 'little')
+        fraction = int.from_bytes(self._ts_data[frame, 1], 'little')
+        fraction *= math.pow(10, -(math.floor(math.log10(fraction)) + 1))
+        return whole, fraction
 
     def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
         """Return a slice along `Z`, i.e.\  a substack of frames.
