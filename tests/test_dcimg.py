@@ -80,6 +80,7 @@ class TestDCIMGFILE(unittest.TestCase):
         f.fmt_version = DCIMGFile.FMT_OLD
         f._4px = np.copy(_4px)
         f._4px.flags.writeable = False
+        f.compute_target_line()
 
         cls.f = f
 
@@ -92,6 +93,7 @@ class TestDCIMGFILE(unittest.TestCase):
         f.fmt_version = DCIMGFile.FMT_NEW
         f._4px = np.copy(_4px)
         f._4px.flags.writeable = False
+        f.compute_target_line()
 
         cls.f_new = f
 

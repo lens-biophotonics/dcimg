@@ -134,6 +134,7 @@ file_name=input_file.dcimg>
         self.x0 = 0
         self.y0 = 0
         self.binning = 1
+        self._target_line = 0  #: target line for 4px correction
 
         self.first_4px_correction_enabled = True
         """For some reason, the first 4 pixels of each frame (or the first 4
@@ -295,6 +296,14 @@ file_name=input_file.dcimg>
             self._ts_data = np.ndarray(
                 (self.nfrms, 2), np.uint32, self.mm, offset, strides)
 
+        self.compute_target_line()
+
+    def compute_target_line(self):
+        if self.fmt_version == DCIMGFile.FMT_OLD:
+            self._target_line = 0
+        else:
+            self._target_line = (1023 - self.y0) // self.binning
+
     def close(self):
         if self.mm is not None:
             self.mm.close()
@@ -426,11 +435,7 @@ file_name=input_file.dcimg>
         stopy = myitem[1].stop
         stepy = myitem[1].step
 
-        if self.fmt_version == DCIMGFile.FMT_OLD:
-            target_line = 0
-        else:
-            target_line = (1023 - self.y0) // self.binning
-
+        target_line = self._target_line
         if self.fmt_version == self.FMT_OLD:
             condition_y = starty == 0 or stopy == 0
         elif self.fmt_version == self.FMT_NEW:
