@@ -106,6 +106,13 @@ file_name=input_file.dcimg>
         ('zeros', '<u12'),
     ]
 
+    NEW_CROP_INFO = [
+        ('x0', '<u2'),
+        ('xsize', '<u2'),
+        ('y0', '<u2'),
+        ('ysize', '<u2'),
+    ]
+
     FMT_OLD = 1
     FMT_NEW = 2
 
@@ -124,6 +131,9 @@ file_name=input_file.dcimg>
         self._ts_data = None  #: timestamp data
         self.file_name = file_name
         self.fmt_version = None
+        self.x0 = 0
+        self.y0 = 0
+        self.binning = 1
 
         self.first_4px_correction_enabled = True
         """For some reason, the first 4 pixels of each frame (or the first 4
@@ -265,7 +275,7 @@ file_name=input_file.dcimg>
             padding = self.bytes_per_img - self.xsize * self.ysize * bd
             padding //= self.ysize
             strides = [
-                self.bytes_per_row * self.xsize,
+                self.bytes_per_img,
                 self.xsize * bd + padding,
                 1 * bd
             ]
@@ -316,6 +326,21 @@ file_name=input_file.dcimg>
         self._sess_header = np.fromstring(self.mm[index_from:index_to],
                                           dtype=sess_dtype)
 
+        if self.fmt_version == self.FMT_NEW:
+            i = index_from + 712
+            dt = np.dtype(self.NEW_CROP_INFO)
+            crop_info = np.fromstring(self.mm[i:i + dt.itemsize],
+                                      dtype=self.NEW_CROP_INFO)
+            self.x0 = crop_info['x0']
+            self.y0 = crop_info['y0']
+            binning_x = crop_info['xsize'][0] // self.xsize
+            binning_y = crop_info['ysize'][0] // self.ysize
+
+            if binning_x != binning_y:
+                raise ValueError('different binning in X and Y')
+
+            self.binning = binning_x
+
         if self.byte_depth != 1 and self.byte_depth != 2:
             raise ValueError(
                 "Invalid byte-depth: {}".format(self.byte_depth))
@@ -323,14 +348,12 @@ file_name=input_file.dcimg>
         expected_bytes_per_row = 256 * math.ceil(
             self.byte_depth * self.ysize // 256 + 1)
         if self.bytes_per_row != expected_bytes_per_row:
-            e_str = "bytes_per_row ({bytes_per_row}) " \
-                    "!= byte_depth ({byte_depth}) * nrows ({y_size})" \
-                .format(**vars(self))
+            e_str = 'invalid value for bytes_per_row'
             logger.warning(e_str)
 
         if self.bytes_per_img != self.bytes_per_row * self.ysize:
-            e_str = "bytes per img ({bytes_per_img}) != nrows ({y_size}) * " \
-                    "bytes_per_row ({bytes_per_row})".format(**vars(self))
+            e_str = 'invalid value for bytes_per_img'
+
             raise ValueError(e_str)
 
     def __getitem__(self, item, copy=None):
@@ -403,13 +426,18 @@ file_name=input_file.dcimg>
         stopy = myitem[1].stop
         stepy = myitem[1].step
 
+        if self.fmt_version == DCIMGFile.FMT_OLD:
+            target_line = 0
+        else:
+            target_line = (1023 - self.y0) // self.binning
+
         if self.fmt_version == self.FMT_OLD:
             condition_y = starty == 0 or stopy == 0
         elif self.fmt_version == self.FMT_NEW:
             if stepy > 0:
-                condition_y = starty <= 1023 and stopy >= 1023
+                condition_y = starty <= target_line and stopy >= target_line
             elif stepy < 0:
-                condition_y = stopy <= 1023 and starty >= 1023
+                condition_y = stopy <= target_line and starty >= target_line
 
         if condition_y and ((startx >= 0 and startx < 4) or stopx < 4):
             if isinstance(a, self.dtype):
@@ -442,11 +470,6 @@ file_name=input_file.dcimg>
             old_shape = a.shape
 
             a.shape = newshape
-
-            if self.fmt_version == DCIMGFile.FMT_OLD:
-                target_line = 0
-            else:
-                target_line = 1023
 
             newy = int(math.floor((target_line - starty) / stepy))
             if stepy < 0:
