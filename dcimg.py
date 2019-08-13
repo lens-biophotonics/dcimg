@@ -79,7 +79,7 @@ file_name=input_file.dcimg>
         ('ysize', '<u4'),
         ('bytes_per_img', '<u4'),
         ('skip3', '2<u4'),
-        ('offset_to_data', '1<u4'),
+        ('offset_to_data', '<u4'),
         ('session_data_size', '<u8'),  # header_size + x*y*byte_depth*nfrms
     ]
 
