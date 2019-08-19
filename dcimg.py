@@ -506,15 +506,9 @@ file_name=input_file.dcimg>
         Returns
         -------
         `numpy.ndarray`
-            A numpy array of dtype `numpy.float64` with frame timestamps in
-            Unix time plus a fractional part, of shape (`zsize`, 2).
+            A numpy array of dtype `numpy.datetime64` with frame timestamps.
         """
-        ts = np.zeros((self.nfrms, 2))
-
-        for i in range(0, self.nfrms):
-            ts[i] = self.ts(i)
-
-        return ts
+        return np.asarray([self.ts(i) for i in range(self.nfrms)])
 
     def ts(self, frame):
         """
@@ -527,14 +521,11 @@ file_name=input_file.dcimg>
 
         Returns
         -------
-        tuple
-            (`unix timestamp`, `fractional part`)
-
+        `numpy.datetime64`
         """
         whole = int.from_bytes(self._ts_data[frame, 0], 'little')
         fraction = int.from_bytes(self._ts_data[frame, 1], 'little')
-        fraction *= math.pow(10, -(math.floor(math.log10(fraction)) + 1))
-        return whole, fraction
+        return np.datetime64(whole * 10**6 + fraction, 'us')
 
     def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
         """Return a slice along `Z`, i.e.\  a substack of frames.
