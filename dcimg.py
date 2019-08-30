@@ -285,6 +285,9 @@ file_name=input_file.dcimg>
 
         if self.fmt_version == DCIMGFile.FMT_OLD:
             # timestamp offset
+            offset = int(self._session_footer_offset + 272)
+            self._fs_data = np.ndarray(
+                (self.nfrms), np.uint32, self.mm, offset)
             offset = int(self._session_footer_offset + 272 + 4 * self.nfrms)
             self._ts_data = np.ndarray(
                 (self.nfrms, 2), np.uint32, self.mm, offset)
@@ -499,6 +502,16 @@ file_name=input_file.dcimg>
             a.shape = old_shape
 
         return a
+
+    def framestamps(self):
+        """Get framestamps.
+
+        Returns
+        -------
+        `numpy.ndarray`
+            A numpy array of dtype `numpy.uint32` with framestamps.
+        """
+        return self._fs_data
 
     def timestamps(self):
         """Get frame timestamps.
