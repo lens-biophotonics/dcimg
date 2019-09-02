@@ -513,8 +513,9 @@ file_name=input_file.dcimg>
 
         return a
 
+    @property
     def framestamps(self):
-        """Get framestamps.
+        """Framestamps of all frames.
 
         Returns
         -------
@@ -523,8 +524,9 @@ file_name=input_file.dcimg>
         """
         return self._fs_data
 
+    @property
     def timestamps(self):
-        """Get frame timestamps.
+        """Timestamps of all frames.
 
         Returns
         -------
