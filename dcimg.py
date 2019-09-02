@@ -129,6 +129,7 @@ file_name=input_file.dcimg>
         self._file_header = None
         self._sess_header = None
         self._ts_data = None  #: timestamp data
+        self._fs_data = None  #: framestamp data
         self.file_name = file_name
         self.fmt_version = None
         self.x0 = 0
@@ -284,17 +285,26 @@ file_name=input_file.dcimg>
         self.mma = np.ndarray(self.shape, self.dtype, self.mm, offset, strides)
 
         if self.fmt_version == DCIMGFile.FMT_OLD:
-            # timestamp offset
+            # framestamp offset
             offset = int(self._session_footer_offset + 272)
-            self._fs_data = np.ndarray(
-                (self.nfrms), np.uint32, self.mm, offset)
-            offset = int(self._session_footer_offset + 272 + 4 * self.nfrms)
+            self._fs_data = np.ndarray(self.nfrms, np.uint32, self.mm, offset)
+
+            # timestamp offset
+            offset += 4 * self.nfrms
             self._ts_data = np.ndarray(
                 (self.nfrms, 2), np.uint32, self.mm, offset)
         elif self.fmt_version == DCIMGFile.FMT_NEW:
+            # framestamps
             offset = int(self._file_header['header_size']
                          + self._sess_header['offset_to_data'][0]
-                         + self.bytes_per_img + 4)
+                         + self.bytes_per_img)
+            strides = self.bytes_per_img + 32
+            self._fs_data = np.ndarray(
+                self.nfrms, np.uint32, self.mm, offset, strides)
+
+
+            # timestamps
+            offset += 4
             strides = (self.bytes_per_img + 32, 4)
             self._ts_data = np.ndarray(
                 (self.nfrms, 2), np.uint32, self.mm, offset, strides)
