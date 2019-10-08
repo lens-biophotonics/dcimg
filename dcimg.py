@@ -10,7 +10,6 @@
 files."""
 
 import math
-import mmap
 import logging
 
 import numpy as np
@@ -118,14 +117,12 @@ file_name=input_file.dcimg>
 
     def __init__(self, file_name=None):
         self.mm = None
-        """a `mmap.mmap` object with the raw contents of the DCIMG file."""
+        """a `numpy.memmap` object with the raw contents of the DCIMG file."""
         self.mma = None
         """memory-mapped `numpy.ndarray` of the image data, without 4px
         correction."""
         self._deep_copy_enabled = None
 
-        self.fileno = None  #: file descriptor
-        self.file = None
         self._file_header = None
         self._sess_header = None
         self._ts_data = None  #: timestamp data
@@ -246,12 +243,7 @@ file_name=input_file.dcimg>
         if file_name is None:
             file_name = self.file_name
 
-        f = open(file_name, 'r')
-        mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_COPY)
-
-        self.fileno = f.fileno()
-        self.file = f
-        self.mm = mm
+        self.mm = np.memmap(file_name)
 
         try:
             self._parse_header()
@@ -318,12 +310,7 @@ file_name=input_file.dcimg>
             self._target_line = (1023 - self.y0) // self.binning
 
     def close(self):
-        if self.mm is not None:
-            self.mm.close()
-        del self.mm
-        self.mm = None
-        if self.file is not None:
-            self.file.close()
+        self.mm = None  # Close the memmap.
 
     def _parse_header(self):
         data = self.mm[0:np.dtype(self.FILE_HDR_DTYPE).itemsize]
