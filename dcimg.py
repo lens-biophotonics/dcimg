@@ -243,7 +243,7 @@ file_name=input_file.dcimg>
         if file_name is None:
             file_name = self.file_name
 
-        self.mm = np.memmap(file_name)
+        self.mm = np.memmap(file_name, mode='r')
 
         try:
             self._parse_header()
