@@ -364,8 +364,7 @@ file_name=input_file.dcimg>
         self.mm = None  # Close the memmap.
 
     def _parse_header(self):
-        data = self.mm[0:np.dtype(self.FILE_HDR_DTYPE).itemsize]
-        self._file_header = np.fromstring(data, dtype=self.FILE_HDR_DTYPE)
+        self._file_header = np.ndarray((1,), self.FILE_HDR_DTYPE, self.mm)
 
         if not self._file_header['file_format'] == b'DCIMG':
             raise ValueError('Invalid DCIMG file')
@@ -380,18 +379,14 @@ file_name=input_file.dcimg>
             raise ValueError('Invalid DCIMG format version: 0x{:04x}'.format(
                 self._file_header['format_version'][0]))
 
-        self._sess_header = np.zeros(1, dtype=sess_dtype)
-        index_from = self._header_size
-        index_to = index_from + self._sess_header.nbytes
-        self._sess_header = np.fromstring(self.mm[index_from:index_to],
-                                          dtype=sess_dtype)
+        self._sess_header = np.ndarray((1,), sess_dtype, self.mm,
+                                       offset=self._header_size)
 
         expected_bytes_per_row = self.byte_depth * self.xsize
         if self.fmt_version == self.FMT_NEW:
-            i = index_from + 712
-            dt = np.dtype(self.NEW_CROP_INFO)
-            crop_info = np.fromstring(self.mm[i:i + dt.itemsize],
-                                      dtype=self.NEW_CROP_INFO)
+            i = self._header_size + 712
+            crop_info = np.ndarray((1,), self.NEW_CROP_INFO, self.mm, i)
+
             self.x0 = crop_info['x0']
             self.y0 = crop_info['y0']
             binning_x = crop_info['xsize'][0] // self.xsize
