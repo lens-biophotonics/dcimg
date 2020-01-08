@@ -293,7 +293,6 @@ file_name=input_file.dcimg>
             self._fs_data = np.ndarray(
                 self.nfrms, np.uint32, self.mm, offset, strides)
 
-
             # timestamps
             offset += 4
             strides = (self.bytes_per_img + 32, 4)
@@ -363,7 +362,6 @@ file_name=input_file.dcimg>
 
         if self.bytes_per_img != self.bytes_per_row * self.ysize:
             e_str = 'invalid value for bytes_per_img'
-
             raise ValueError(e_str)
 
     def __getitem__(self, item, copy=None):
