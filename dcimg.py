@@ -82,6 +82,49 @@ file_name=input_file.dcimg>
         ('session_data_size', '<u8'),  # header_size + x*y*byte_depth*nfrms
     ]
 
+    SESSION_FOOTER_DTYPE = [
+        ('format_version', '<u4'),
+        ('skip0', '<u4'),
+        ('offset_to_2nd_struct', '<u8'),
+        ('skip1', '2<u4'),
+        ('offset_to_offset_to_end_of_data', '<u8'),
+        ('skip2', '2<u4'),
+        ('footer_size', '<u4'),
+        ('skip3', '<u4'),
+
+        # an almost empty part after the footer
+        # contains 'offset_to_end_of_data', 0x00000000 0x00000000
+        # repeated 2 * nfrms times
+        ('2nd_footer_size', '<u4'),  # = 2 * nfrms * 16
+
+        ('skip4', '19<u4'),
+        ('offset_to_end_of_data', '<u8'),  # sum of the two offsets above
+        ('skip5', '<u8'),  # sum of the two offsets above
+        ('offset_to_end_of_data_again', '<u8'),  # repeated
+        ('skip6', '<u8'),  # repeated
+    ]
+
+    SESSION_FOOTER2_DTYPE = [
+        ('offset_to_offset_to_timestamps', '<u8'),
+        ('skip0', '2<u4'),
+        ('offset_to_offset_to_frame_counts', '<u8'),
+        ('skip1', '2<u4'),
+        ('offset_to_offset_to_4px', '<u8'),
+        ('skip2', '2<u4'),
+        ('offset_to_frame_counts', '<u8'),
+        ('skip3', '2<u4'),
+        ('offset_to_timestamps', '<u8'),
+        ('skip4', '4<u4'),
+        ('offset_to_4px', '<u8'),
+        ('skip5', '2<u4'),
+
+        # this is zero if there is no 4px correction info in the footer
+        # (maybe because of cropping, so the first line is not included) and
+        # is 8 if there is 4px correction info stored in the footer. Might be
+        # the size in bytes of the 4px correction for each frame (8 = 4 * 2)
+        ('4px_size', '<u8'),
+    ]
+
     # newer versions of the dcimg format have a different header
     NEW_SESSION_HEADER_DTYPE = [
         ('session_size', '<u8'),
@@ -125,6 +168,8 @@ file_name=input_file.dcimg>
 
         self._file_header = None
         self._sess_header = None
+        self._sess_footer = None
+        self._sess_footer2 = None
         self._ts_data = None  #: timestamp data
         self._fs_data = None  #: framestamp data
         self.file_name = file_name
@@ -132,7 +177,7 @@ file_name=input_file.dcimg>
         self.x0 = 0
         self.y0 = 0
         self.binning = 1
-        self._target_line = 0  #: target line for 4px correction
+        self._target_line = -1  #: target line for 4px correction
 
         self.first_4px_correction_enabled = True
         """For some reason, the first 4 pixels of each frame (or the first 4
@@ -230,12 +275,13 @@ file_name=input_file.dcimg>
 
     @property
     def _session_footer_offset(self):
-        try:
+        sess_data_size = None
+        if self.fmt_version == self.FMT_OLD:
             sess_data_size = int(self._sess_header['session_data_size'][0])
-        except ValueError:
-            sess_data_size = self._sess_header['offset_to_data'][0] + (int(
-                self._sess_header['bytes_per_img'][0] + 8)
-                              * self.nfrms)
+        elif self.fmt_version == self.FMT_NEW:
+            sess_data_size = \
+                self._sess_header['offset_to_data'][0] \
+                + (int(self._sess_header['bytes_per_img'][0] + 8) * self.nfrms)
         return self._header_size + sess_data_size
 
     def open(self, file_name=None):
@@ -247,6 +293,7 @@ file_name=input_file.dcimg>
 
         try:
             self._parse_header()
+            self._parse_footer()
         except ValueError:
             self.close()
             raise
@@ -256,10 +303,11 @@ file_name=input_file.dcimg>
         data_offset = (int(self._file_header['header_size'])
                        + int(self._sess_header['offset_to_data']))
         if self.fmt_version == self.FMT_OLD:
-            offset = (self._session_footer_offset + 272
-                      + self.nfrms * (4 + 8))  # 4: frame count, 8: timestamp
-            self._4px = np.ndarray(
-                (self.nfrms, 4), self.dtype, self.mm, offset)
+            if self._has_4px_data:
+                offset = self._session_footer_offset \
+                         + self._sess_footer2['offset_to_4px']
+                self._4px = np.ndarray(
+                    (self.nfrms, 4), self.dtype, self.mm, offset)
             data_strides = (self.bytes_per_img, self.bytes_per_row, bd)
         elif self.fmt_version == self.FMT_NEW:
             strides = (self.bytes_per_img + 32, bd)
@@ -303,7 +351,10 @@ file_name=input_file.dcimg>
 
     def compute_target_line(self):
         if self.fmt_version == DCIMGFile.FMT_OLD:
-            self._target_line = 0
+            if self._has_4px_data:
+                self._target_line = 0
+            else:
+                self._target_line = -1
         else:
             self._target_line = (1023 - self.y0) // self.binning
 
@@ -363,6 +414,39 @@ file_name=input_file.dcimg>
         if self.bytes_per_img != self.bytes_per_row * self.ysize:
             e_str = 'invalid value for bytes_per_img'
             raise ValueError(e_str)
+
+    def _parse_footer(self):
+        if self.fmt_version != self.FMT_OLD:
+            return
+
+        self._sess_footer = np.ndarray((1,), self.SESSION_FOOTER_DTYPE, self.mm,
+                                       self._session_footer_offset)
+
+        offset = (self._session_footer_offset
+                  + int(self._sess_footer['offset_to_2nd_struct']))
+
+        self._sess_footer2 = \
+            np.ndarray((1,), self.SESSION_FOOTER2_DTYPE, self.mm, offset)
+
+    @property
+    def _has_4px_data(self):
+        """
+        Whether the footer contains 4px correction (only for `FMT_OLD`)
+
+        Returns
+        -------
+        bool
+        """
+        if self.fmt_version == self.FMT_NEW:
+            raise NotImplementedError('not implemented for FMT_NEW')
+
+        # maybe this is sufficient
+        # return int(self._sess_footer2['4px_size']) > 0
+
+        footer_size = int(self._sess_footer['footer_size'])
+        offset_to_4px = int(self._sess_footer2['offset_to_4px'])
+
+        return footer_size == offset_to_4px + 4 * self.byte_depth * self.nfrms
 
     def __getitem__(self, item, copy=None):
         """Allow to access image data using NumPy's basic indexing."""
@@ -435,7 +519,8 @@ file_name=input_file.dcimg>
         stepy = myitem[1].step
 
         target_line = self._target_line
-        if self.fmt_version == self.FMT_OLD:
+        condition_y = False
+        if self.fmt_version == self.FMT_OLD and self._has_4px_data:
             condition_y = starty == 0 or stopy == 0
         elif self.fmt_version == self.FMT_NEW:
             if stepy > 0:

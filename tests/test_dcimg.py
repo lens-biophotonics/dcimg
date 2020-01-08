@@ -57,6 +57,12 @@ test_vectors = [
 ]
 
 
+class DCIMGFileOverride4px(DCIMGFile):
+    @property
+    def _has_4px_data(self):
+        return True
+
+
 @ddt
 class TestDCIMGFILE(unittest.TestCase):
 
@@ -71,7 +77,7 @@ class TestDCIMGFILE(unittest.TestCase):
 
         _4px = (65000 - np.arange(nfrms * 4)).reshape((nfrms, 4))
 
-        f = DCIMGFile()
+        f = DCIMGFileOverride4px()
         f._sess_header = np.copy(_sess_header)
         f.mma = np.arange(np.prod(f.shape), dtype=np.uint16).reshape(f.shape)
         f.mma.flags.writeable = False
