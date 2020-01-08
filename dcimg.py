@@ -566,6 +566,9 @@ file_name=input_file.dcimg>
 
             a_index_exp = np.index_exp[..., newy, newstartx:newstopx]
 
+            if not a.flags.writeable:
+                a = np.copy(a)
+
             if self.first_4px_correction_enabled:
                 _range = sorted((startx, stopx))
                 _4start = max(0, _range[0])
