@@ -116,7 +116,8 @@ file_name=input_file.dcimg>
         ('offset_to_timestamps', '<u8'),
         ('skip4', '4<u4'),
         ('offset_to_4px', '<u8'),
-        ('skip5', '2<u4'),
+        ('skip5', '<u4'),
+        ('4px_offset_in_frame', '<u4'),
 
         # this is zero if there is no 4px correction info in the footer
         # (maybe because of cropping, so the first line is not included) and
@@ -352,7 +353,8 @@ file_name=input_file.dcimg>
     def compute_target_line(self):
         if self.fmt_version == DCIMGFile.FMT_OLD:
             if self._has_4px_data:
-                self._target_line = 0
+                self._target_line = (self._sess_footer2['4px_offset_in_frame']
+                                     // self.bytes_per_row)
             else:
                 self._target_line = -1
         else:

@@ -62,6 +62,9 @@ class DCIMGFileOverride4px(DCIMGFile):
     def _has_4px_data(self):
         return True
 
+    def compute_target_line(self):
+        self._target_line = 0
+
 
 @ddt
 class TestDCIMGFILE(unittest.TestCase):
