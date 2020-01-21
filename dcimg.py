@@ -195,8 +195,8 @@ file_name=input_file.dcimg>
             self.open()
 
     def __repr__(self):
-        return '<DCIMGFile shape={}x{}x{} dtype={} file_name={}>'.format(
-            *self.shape, self.dtype, self.file_name)
+        return '<DCIMGFile file_name="{}" shape={} dtype={}>'.format(
+            self.file_name, self.shape, self.dtype)
 
     def __del__(self):
         self.close()
