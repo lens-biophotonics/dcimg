@@ -235,9 +235,9 @@ file_name=input_file.dcimg>
     def dtype(self):
         """NumPy numerical dtype."""
         if self.byte_depth == 1:
-            return np.uint8
+            return np.dtype(np.uint8)
         elif self.byte_depth == 2:
-            return np.uint16
+            return np.dtype(np.uint16)
 
     @property
     def xsize(self):
@@ -526,7 +526,7 @@ file_name=input_file.dcimg>
                 condition_y = stopy <= target_line <= starty
 
         if condition_y and ((0 <= startx < 4) or stopx < 4):
-            if isinstance(a, self.dtype):
+            if a.size == 1:
                 if self.first_4px_correction_enabled:
                     a = self._4px[myitem[0].start, startx]
                 else:
