@@ -11,6 +11,7 @@ files."""
 
 import math
 import logging
+from pathlib import Path
 
 import numpy as np
 
@@ -159,7 +160,7 @@ file_name=input_file.dcimg>
     FMT_OLD = 1
     FMT_NEW = 2
 
-    def __init__(self, file_name=None):
+    def __init__(self, file_path=None):
         self.mm = None
         """a `numpy.memmap` object with the raw contents of the DCIMG file."""
         self.mma = None
@@ -173,7 +174,9 @@ file_name=input_file.dcimg>
         self._sess_footer2 = None
         self._ts_data = None  #: timestamp data
         self._fs_data = None  #: framestamp data
-        self.file_name = file_name
+        self.file_path = file_path
+        if file_path:
+            self.file_path = Path(file_path)
         self.fmt_version = None
         self.x0 = 0
         self.y0 = 0
@@ -191,12 +194,12 @@ file_name=input_file.dcimg>
         """A `numpy.ndarray` of shape (`nfrms`, 4) containing the first 4
         pixels of each frame."""
 
-        if file_name is not None:
+        if file_path is not None:
             self.open()
 
     def __repr__(self):
-        return '<DCIMGFile file_name="{}" shape={} dtype={}>'.format(
-            self.file_name, self.shape, self.dtype)
+        return '<DCIMGFile file_path="{}" shape={} dtype={}>'.format(
+            self.file_path, self.shape, self.dtype)
 
     def __del__(self):
         self.close()
@@ -285,12 +288,12 @@ file_name=input_file.dcimg>
                 + (int(self._sess_header['bytes_per_img'][0] + 8) * self.nfrms)
         return self._header_size + sess_data_size
 
-    def open(self, file_name=None):
+    def open(self, file_path=None):
         self.close()
-        if file_name is None:
-            file_name = self.file_name
+        if file_path is not None:
+            self.file_path = Path(file_path)
 
-        self.mm = np.memmap(file_name, mode='r')
+        self.mm = np.memmap(self.file_path, mode='r')
 
         try:
             self._parse_header()
