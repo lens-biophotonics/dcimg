@@ -306,7 +306,7 @@ file_name=input_file.dcimg>
         if self.fmt_version == self.FMT_OLD:
             if self._has_4px_data:
                 offset = self._session_footer_offset \
-                         + self._sess_footer2['offset_to_4px']
+                         + int(self._sess_footer2['offset_to_4px'])
                 self._4px = np.ndarray(
                     (self.nfrms, 4), self.dtype, self.mm, offset)
             data_strides = (self.bytes_per_img, self.bytes_per_row, bd)
@@ -353,8 +353,9 @@ file_name=input_file.dcimg>
     def compute_target_line(self):
         if self.fmt_version == DCIMGFile.FMT_OLD:
             if self._has_4px_data:
-                self._target_line = (self._sess_footer2['4px_offset_in_frame']
-                                     // self.bytes_per_row)
+                self._target_line = (
+                    int(self._sess_footer2['4px_offset_in_frame'])
+                    // self.bytes_per_row)
             else:
                 self._target_line = -1
         else:
