@@ -521,11 +521,11 @@ file_name=input_file.dcimg>
             condition_y = starty == 0 or stopy == 0
         elif self.fmt_version == self.FMT_NEW:
             if stepy > 0:
-                condition_y = starty <= target_line and stopy >= target_line
+                condition_y = starty <= target_line <= stopy
             elif stepy < 0:
-                condition_y = stopy <= target_line and starty >= target_line
+                condition_y = stopy <= target_line <= starty
 
-        if condition_y and ((startx >= 0 and startx < 4) or stopx < 4):
+        if condition_y and ((0 <= startx < 4) or stopx < 4):
             if isinstance(a, self.dtype):
                 if self.first_4px_correction_enabled:
                     a = self._4px[myitem[0].start, startx]
