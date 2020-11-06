@@ -386,7 +386,6 @@ file_name=input_file.dcimg>
         self._sess_header = np.ndarray((1,), sess_dtype, self.mm,
                                        offset=self._header_size)
 
-        expected_bytes_per_row = self.byte_depth * self.xsize
         if self.fmt_version == self.FMT_NEW:
             i = self._header_size + 712
             crop_info = np.ndarray((1,), self.NEW_CROP_INFO, self.mm, i)
@@ -401,16 +400,9 @@ file_name=input_file.dcimg>
 
             self.binning = binning_x
 
-            expected_bytes_per_row = 256 * math.ceil(
-                self.byte_depth * self.xsize // 256 + 1)
-
         if self.byte_depth != 1 and self.byte_depth != 2:
             raise ValueError(
                 "Invalid byte-depth: {}".format(self.byte_depth))
-
-        if self.bytes_per_row != expected_bytes_per_row:
-            e_str = 'invalid value for bytes_per_row'
-            logger.warning(e_str)
 
         if self.bytes_per_img != self.bytes_per_row * self.ysize:
             e_str = 'invalid value for bytes_per_img'
