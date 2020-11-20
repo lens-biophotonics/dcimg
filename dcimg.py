@@ -488,6 +488,8 @@ file_name=input_file.dcimg>
                 start = 0 if step > 0 else curr_max
             elif start < 0:
                 start += curr_max
+                if stop is not None:
+                    stop += curr_max
             elif start > curr_max:
                 start = curr_max
 

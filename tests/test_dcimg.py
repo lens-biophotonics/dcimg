@@ -8,6 +8,7 @@ from dcimg import DCIMGFile
 
 test_vectors = [
     np.index_exp[...],
+    np.index_exp[..., -1],
     np.index_exp[:, :, :],
     np.index_exp[..., ::-1],
     np.index_exp[..., ::-1, :],
