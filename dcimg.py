@@ -441,16 +441,11 @@ file_name=input_file.dcimg>
 
         return footer_size == offset_to_4px + 4 * self.byte_depth * self.nfrms
 
-    def __getitem__(self, item, copy=None):
+    def __getitem__(self, item):
         """Allow to access image data using NumPy's basic indexing."""
         a = self.mma[item]
 
-        if copy is None:
-            deepcopy = self.deep_copy_enabled
-        else:
-            deepcopy = copy
-
-        if deepcopy:
+        if self.deep_copy_enabled:
             a = np.copy(a)
 
         if self.first_4px_correction_enabled is None:
@@ -641,9 +636,12 @@ file_name=input_file.dcimg>
             shape of the array is (`end_frame` - `start_frame`, `ysize`,
             `xsize`).
         """
-        a = self.__getitem__(slice(start_frame, end_frame), copy=copy)
+        old_copy = self.deep_copy_enabled
+        self.deep_copy_enabled = copy
+        a = self.__getitem__(slice(start_frame, end_frame))
         if dtype is not None:
             a = a.astype(dtype)
+        self.deep_copy_enabled = old_copy
 
         return a
 
