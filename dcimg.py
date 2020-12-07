@@ -614,16 +614,26 @@ file_name=input_file.dcimg>
         fraction = int.from_bytes(self._ts_data[frame, 1], 'little')
         return np.datetime64(whole * 10**6 + fraction, 'us')
 
-    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
+    @staticmethod
+    def _args_to_slice(arg1, arg2=None, step=None):
+        myslice = slice(arg1, arg2, step)
+        if arg2 is None and step is None:
+            myslice = slice(arg1)
+        return myslice
+
+    def zslice(self, arg1, arg2=None, step=None, dtype=None, copy=True):
         """Return a slice along `Z`, i.e.\  a substack of frames.
 
         Parameters
         ----------
-        start_frame : int
-            first frame to select
-        end_frame : int
-            last frame to select (noninclusive). If None, defaults to
-            `start_frame + 1`
+        arg1 : int
+            Mandatory argument, will be passed to `python:slice`
+            If arg2 and step are both None, it will be passed as `slice(arg1)`,
+            i.e. it would act as the stop argument.
+        arg2 : int
+            If not null, will be passed as `slice(arg1, arg2, step)`
+        step : int
+            If not null, will be passed as `slice(arg1, arg2, step)`
         dtype
         copy : bool
             If True, the requested slice is copied to memory. Otherwise a
@@ -638,7 +648,8 @@ file_name=input_file.dcimg>
         """
         old_copy = self.deep_copy_enabled
         self.deep_copy_enabled = copy
-        a = self.__getitem__(slice(start_frame, end_frame))
+        myslice = self._args_to_slice(arg1, arg2, step)
+        a = self[myslice.start:myslice.stop:myslice.step]
         if dtype is not None:
             a = a.astype(dtype)
         self.deep_copy_enabled = old_copy
@@ -665,7 +676,7 @@ file_name=input_file.dcimg>
         """
         start_frame = index * frames_per_slice
         end_frame = start_frame + frames_per_slice
-        return self.zslice(start_frame, end_frame, dtype, copy)
+        return self.zslice(start_frame, end_frame, 1, dtype, copy)
 
     def whole(self, dtype=None, copy=True):
         """Convenience function to retrieve the whole stack.

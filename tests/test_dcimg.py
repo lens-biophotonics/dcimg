@@ -133,13 +133,33 @@ class TestDCIMGFILE(unittest.TestCase):
 
     def testZSlice(self):
         for f, a_ok in self.test_config:
+            a = f.zslice(3)
+            self.assertTrue(np.array_equal(a_ok[:3], a))
+
             a = f.zslice(3, 5)
             self.assertTrue(np.array_equal(a_ok[3:5], a))
+
+            a = f.zslice(3, 8, 2)
+            self.assertTrue(np.array_equal(a_ok[3:8:2], a))
+
+            a = f.zslice(-8, -3, 2)
+            self.assertTrue(np.array_equal(a_ok[-8:-3:2], a))
+
+            a = f.zslice(-8, -3, -2)
+            self.assertTrue(np.array_equal(a_ok[-8:-3:-2], a))
+            self.assertEqual(0, a.shape[0])
 
     def testWhole(self):
         for f, a_ok in self.test_config:
             a = f.whole()
             self.assertTrue(np.array_equal(a_ok, a))
+
+    def testArgsToSlice(self):
+        self.assertEqual(slice(42), DCIMGFile._args_to_slice(42))
+        self.assertEqual(slice(10, 42), DCIMGFile._args_to_slice(10, 42))
+        self.assertEqual(slice(10, 42, 5), DCIMGFile._args_to_slice(10, 42, 5))
+
+        self.assertEqual(slice(42), DCIMGFile._args_to_slice(None, 42, None))
 
 
 if __name__ == '__main__':
