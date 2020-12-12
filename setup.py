@@ -14,11 +14,15 @@ def get_version():
     raise RuntimeError('Unable to find version string in %s.' % (VERSIONFILE,))
 
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name='dcimg',
     version=get_version(),
     description='Python module to read Hamamatsu DCIMG files',
-    long_description='Python module to read Hamamatsu DCIMG files',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url='https://github.com/lens-biophotonics/dcimg',
 
     # Author details
