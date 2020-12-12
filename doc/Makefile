@@ -21,7 +21,7 @@ help:
 
 
 generate_rst:
-	sphinx-apidoc -faM --separate -o generated .. ../setup.py
+	sphinx-apidoc -faM --separate -o generated .. ../setup.py ../tests ../doc
 
 clean:
 	rm -fr _build generated

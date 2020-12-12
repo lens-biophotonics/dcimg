@@ -45,7 +45,7 @@ extensions = [
 
 
 intersphinx_mapping = {
-    'numpy': ('https://docs.scipy.org/doc/numpy', None),
+    'numpy': ('https://numpy.org/doc/stable', None),
     'python': ('https://docs.python.org/3', None),
 }
 
@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'dcimg'
-copyright = '2017, Giacomo Mazzamuto'
+copyright = '2017-2020, Giacomo Mazzamuto'
 author = 'Giacomo Mazzamuto'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -183,4 +183,4 @@ InstanceAttributeDocumenter.add_directive_header = iad_add_directive_header
 
 
 def setup(app):
-    app.add_javascript('https://docs.python.org/3/_static/copybutton.js')
+    app.add_js_file('https://docs.python.org/3/_static/copybutton.js')
