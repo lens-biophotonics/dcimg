@@ -38,3 +38,6 @@ Other convenience methods for accessing image data are: `zslice`, `zslice_idx`,
 with DCIMGFile('input_file.dcimg') as f:
      a = f[800, ...]
 ```
+
+For further details refer to:
+https://lens-biophotonics.github.io/dcimg/
