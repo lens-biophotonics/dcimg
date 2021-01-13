@@ -2,6 +2,9 @@ name: Python package and documentation
 
 on:
   push:
+  pull_request:
+    branches:
+      - '**:**'  # run only for PR from forked repos
   workflow_dispatch:
 
 jobs:
@@ -41,6 +44,7 @@ jobs:
         PYTHONPATH: ..
       run: make html
     - name: GitHub Pages
+      if: github.ref == 'refs/heads/master'
       uses: crazy-max/ghaction-github-pages@v2.2.0
       with:
         build_dir: doc/_build/html
