@@ -398,7 +398,8 @@ file_name=input_file.dcimg>
             if binning_x != binning_y:
                 raise ValueError('different binning in X and Y')
 
-            self.binning = binning_x
+            if binning_x > 0:
+                self.binning = binning_x
 
         if self.byte_depth != 1 and self.byte_depth != 2:
             raise ValueError(
