@@ -140,14 +140,23 @@ file_name=input_file.dcimg>
         ('bytes_per_img', '<u4'),
         ('skip3', '2<u4'),
         ('offset_to_data', '<u8'),
+        ('skip4', '5<u4'),
+        ('frame_footer_size', '<u4'),
     ]
 
-    NEW_FRAME_FOOTER_DTYPE = [
+    NEW_FRAME_FOOTER_CAMLINK_DTYPE = [
         ('progressive_number', '<u4'),
         ('timestamp', '<u4'),
         ('timestamp_frac', '<u4'),
         ('4px', '<u8'),
-        ('zeros', '<u12'),
+        ('zeros', '3<u4'),
+    ]
+
+    NEW_FRAME_FOOTER_USB_DTYPE = [
+        ('progressive_number', '<u4'),
+        ('timestamp', '<u4'),
+        ('timestamp_frac', '<u4'),
+        ('zeros', '<u4'),
     ]
 
     NEW_CROP_INFO = [
@@ -188,7 +197,8 @@ file_name=input_file.dcimg>
         pixels of line number 1023 of each frame) are stored in a different
         area in the file. This switch enables retrieving those 4 pixels. If
         False, those pixels are set to 0. If None, they are left unchanged.
-        Defaults to True."""
+        Actually, when the `dtype` is `uint8`, this affects the first 8 pixels.
+        In any case this affects 8 bytes. Defaults to True."""
 
         self._4px = None
         """A `numpy.ndarray` of shape (`nfrms`, 4) containing the first 4
@@ -306,6 +316,7 @@ file_name=input_file.dcimg>
         data_strides = None
         data_offset = (int(self._file_header['header_size'])
                        + int(self._sess_header['offset_to_data']))
+        frame_footer_size = None
         if self.fmt_version == self.FMT_OLD:
             if self._has_4px_data:
                 offset = self._session_footer_offset \
@@ -314,13 +325,15 @@ file_name=input_file.dcimg>
                     (self.nfrms, 4), self.dtype, self.mm, offset)
             data_strides = (self.bytes_per_img, self.bytes_per_row, bd)
         elif self.fmt_version == self.FMT_NEW:
-            strides = (self.bytes_per_img + 32, bd)
-            self._4px = np.ndarray((self.nfrms, 4), self.dtype, self.mm,
-                                   data_offset + self.bytes_per_img + 12,
-                                   strides)
+            frame_footer_size = self._sess_header['frame_footer_size'][0]
+            strides = (self.bytes_per_img + frame_footer_size, bd)
+            if self._has_4px_data:
+                self._4px = np.ndarray((self.nfrms, 8 // self.byte_depth), self.dtype, self.mm,
+                                       data_offset + self.bytes_per_img + 12,
+                                       strides)
             padding = self.bytes_per_img - self.xsize * self.ysize * bd
             padding //= self.ysize
-            data_strides = (self.bytes_per_img + 32,
+            data_strides = (self.bytes_per_img + frame_footer_size,
                             self.xsize * bd + padding,
                             bd)
 
@@ -341,7 +354,7 @@ file_name=input_file.dcimg>
             offset = int(self._file_header['header_size']
                          + self._sess_header['offset_to_data'][0]
                          + self.bytes_per_img)
-            strides = self.bytes_per_img + 32
+            strides = self.bytes_per_img + frame_footer_size
             self._fs_data = np.ndarray(
                 self.nfrms, np.uint32, self.mm, offset, strides)
 
@@ -432,7 +445,7 @@ file_name=input_file.dcimg>
         bool
         """
         if self.fmt_version == self.FMT_NEW:
-            raise NotImplementedError('not implemented for FMT_NEW')
+            return np.dtype(self.NEW_FRAME_FOOTER_CAMLINK_DTYPE).itemsize == self._sess_header['frame_footer_size']
 
         # maybe this is sufficient
         # return int(self._sess_footer2['4px_size']) > 0
@@ -440,7 +453,7 @@ file_name=input_file.dcimg>
         footer_size = int(self._sess_footer['footer_size'])
         offset_to_4px = int(self._sess_footer2['offset_to_4px'])
 
-        return footer_size == offset_to_4px + 4 * self.byte_depth * self.nfrms
+        return footer_size == offset_to_4px + 8 * self.nfrms
 
     def __getitem__(self, item):
         """Allow to access image data using NumPy's basic indexing."""
@@ -513,13 +526,15 @@ file_name=input_file.dcimg>
         condition_y = False
         if self.fmt_version == self.FMT_OLD and self._has_4px_data:
             condition_y = starty == 0 or stopy == 0
-        elif self.fmt_version == self.FMT_NEW:
+        elif self.fmt_version == self.FMT_NEW and self._has_4px_data:
             if stepy > 0:
                 condition_y = starty <= target_line <= stopy
             elif stepy < 0:
                 condition_y = stopy <= target_line <= starty
 
-        if condition_y and ((0 <= startx < 4) or stopx < 4):
+        n = 8 // self.byte_depth
+
+        if condition_y and ((0 <= startx < n) or stopx < n):
             if a.size == 1:
                 if self.first_4px_correction_enabled:
                     a = self._4px[myitem[0].start, startx]
@@ -529,16 +544,16 @@ file_name=input_file.dcimg>
 
             if startx < stopx:
                 newstartx = 0
-                if stopx > 4:
-                    newstopx = int(math.ceil((4 - startx) / abs(stepx)))
+                if stopx > n:
+                    newstopx = int(math.ceil((n - startx) / abs(stepx)))
                 else:
                     newstopx = (stopx - startx) // abs(stepx)
             else:
                 newstopx = a.shape[-1]
-                if a.shape[-1] < 4:
+                if a.shape[-1] < n:
                     newstartx = 0
                 else:
-                    newstartx = (a.shape[-1] - 4 // abs(stepx))
+                    newstartx = (a.shape[-1] - n // abs(stepx))
 
             if newstartx == newstopx:
                 return np.empty([0])
@@ -563,7 +578,7 @@ file_name=input_file.dcimg>
             if self.first_4px_correction_enabled:
                 _range = sorted((startx, stopx))
                 _4start = max(0, _range[0])
-                _4stop = min(4, _range[1])
+                _4stop = min(8 // self.byte_depth, _range[1])
                 _4px = self._4px[item[0], _4start:_4stop:abs(stepx)]
 
                 if stepx < 0:

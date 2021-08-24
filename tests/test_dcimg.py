@@ -84,7 +84,7 @@ class TestDCIMGFILE(unittest.TestCase):
         _4px = (65000 - np.arange(nfrms * 4)).reshape((nfrms, 4))
 
         f = DCIMGFileOverride4px()
-        f._sess_header = np.copy(_sess_header)
+        f._sess_header = _sess_header
         f.mma = np.arange(np.prod(f.shape), dtype=np.uint16).reshape(f.shape)
         f.mma.flags.writeable = False
         f.deep_copy_enabled = True
@@ -97,7 +97,13 @@ class TestDCIMGFILE(unittest.TestCase):
         cls.f = f
 
         f = DCIMGFile()
-        f._sess_header = np.copy(_sess_header)
+        _sess_header = np.zeros(1, dtype=DCIMGFile.NEW_SESSION_HEADER_DTYPE)
+        _sess_header['nfrms'][0] = nfrms
+        _sess_header['ysize'][0] = 2048
+        _sess_header['xsize'][0] = 2048
+        _sess_header['byte_depth'][0] = 2
+        _sess_header['frame_footer_size'][0] = 32
+        f._sess_header = _sess_header
         f.mma = np.arange(np.prod(f.shape), dtype=np.uint16).reshape(f.shape)
         f.mma.flags.writeable = False
         f.deep_copy_enabled = True
