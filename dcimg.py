@@ -360,7 +360,7 @@ file_name=input_file.dcimg>
 
             # timestamps
             offset += 4
-            strides = (self.bytes_per_img + 32, 4)
+            strides = (self.bytes_per_img + frame_footer_size, 4)
             self._ts_data = np.ndarray(
                 (self.nfrms, 2), np.uint32, self.mm, offset, strides)
 
@@ -374,6 +374,8 @@ file_name=input_file.dcimg>
                     // self.bytes_per_row)
             else:
                 self._target_line = -1
+        elif self._file_header['format_version'] == 0x2000000:
+            self._target_line = 0
         else:
             self._target_line = (1023 - self.y0) // self.binning
 
@@ -389,7 +391,7 @@ file_name=input_file.dcimg>
         if self._file_header['format_version'] == 0x7:
             sess_dtype = self.SESS_HDR_DTYPE
             self.fmt_version = self.FMT_OLD
-        elif self._file_header['format_version'] == 0x1000000:
+        elif self._file_header['format_version'] == 0x1000000 or self._file_header['format_version'] == 0x2000000:
             self.fmt_version = self.FMT_NEW
             sess_dtype = self.NEW_SESSION_HEADER_DTYPE
         else:
@@ -438,13 +440,15 @@ file_name=input_file.dcimg>
     @property
     def _has_4px_data(self):
         """
-        Whether the footer contains 4px correction (only for `FMT_OLD`)
+        Whether the footer contains 4px correction
 
         Returns
         -------
         bool
         """
         if self.fmt_version == self.FMT_NEW:
+            if self._sess_header['frame_footer_size'] >= 512:
+                return True
             return np.dtype(self.NEW_FRAME_FOOTER_CAMLINK_DTYPE).itemsize == self._sess_header['frame_footer_size']
 
         # maybe this is sufficient

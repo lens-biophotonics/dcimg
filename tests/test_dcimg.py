@@ -104,6 +104,9 @@ class TestDCIMGFILE(unittest.TestCase):
         _sess_header['byte_depth'][0] = 2
         _sess_header['frame_footer_size'][0] = 32
         f._sess_header = _sess_header
+        _file_header = np.zeros(1, dtype=DCIMGFile.FILE_HDR_DTYPE)
+        _file_header['format_version'] = 0x1000000
+        f._file_header = _file_header
         f.mma = np.arange(np.prod(f.shape), dtype=np.uint16).reshape(f.shape)
         f.mma.flags.writeable = False
         f.deep_copy_enabled = True
