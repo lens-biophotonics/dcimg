@@ -1,0 +1,7 @@
+dcimg module
+============
+
+.. automodule:: dcimg
+   :members:
+   :undoc-members:
+   :show-inheritance:

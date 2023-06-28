@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dcimg module &mdash; dcimg 0.6.0.post1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            dcimg
+          </a>
+              <div class="version">
+                0.6.0.post1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">dcimg module</a><ul>
+<li><a class="reference internal" href="#dcimg.DCIMGFile"><code class="docutils literal notranslate"><span class="pre">DCIMGFile</span></code></a><ul>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.FILE_HDR_DTYPE"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.FILE_HDR_DTYPE</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.FMT_NEW"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.FMT_NEW</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.FMT_OLD"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.FMT_OLD</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.NEW_CROP_INFO"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.NEW_CROP_INFO</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.NEW_FRAME_FOOTER_CAMLINK_DTYPE"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.NEW_FRAME_FOOTER_CAMLINK_DTYPE</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.NEW_FRAME_FOOTER_USB_DTYPE"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.NEW_FRAME_FOOTER_USB_DTYPE</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.NEW_SESSION_HEADER_DTYPE"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.NEW_SESSION_HEADER_DTYPE</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.SESSION_FOOTER2_DTYPE"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.SESSION_FOOTER2_DTYPE</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.SESSION_FOOTER_DTYPE"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.SESSION_FOOTER_DTYPE</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.SESS_HDR_DTYPE"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.SESS_HDR_DTYPE</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.as_dask_array"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.as_dask_array()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.byte_depth"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.byte_depth</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.bytes_per_img"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.bytes_per_img</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.bytes_per_row"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.bytes_per_row</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.close"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.close()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.compute_target_line"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.compute_target_line()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.deep_copy_enabled"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.deep_copy_enabled</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.dtype"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.dtype</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.file_size"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.file_size</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.first_4px_correction_enabled"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.first_4px_correction_enabled</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.frame"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.frame()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.framestamps"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.framestamps</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.mm"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.mm</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.mma"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.mma</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.nfrms"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.nfrms</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.open"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.open()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.shape"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.shape</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.timestamps"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.timestamps</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.ts"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.ts()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.whole"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.whole()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.xsize"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.xsize</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.ysize"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.ysize</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.zsize"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.zsize</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.zslice"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.zslice()</span></code></a></li>
+<li><a class="reference internal" href="#dcimg.DCIMGFile.zslice_idx"><code class="docutils literal notranslate"><span class="pre">DCIMGFile.zslice_idx()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">dcimg</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">dcimg module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/dcimg.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-dcimg">
+<span id="dcimg-module"></span><h1>dcimg module<a class="headerlink" href="#module-dcimg" title="Permalink to this heading">¶</a></h1>
+<p>This module provides the <a class="reference internal" href="../index.html#dcimg.DCIMGFile" title="dcimg.DCIMGFile"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DCIMGFile</span></code></a> class for accessing Hamamatsu DCIMG
+files.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dcimg.</span></span><span class="sig-name descname"><span class="pre">DCIMGFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A DCIMG file (Hamamatsu format), memory-mapped.</p>
+<p>This class provides an interface for reading 3D Hamamatsu DCIMG files.</p>
+<p>Usage is pretty straightforward. First of all, create a <a class="reference internal" href="../index.html#dcimg.DCIMGFile" title="dcimg.DCIMGFile"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DCIMGFile</span></code></a> object:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_file</span> <span class="o">=</span> <span class="n">DCIMGFile</span><span class="p">(</span><span class="s1">&#39;input_file.dcimg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_file</span>
+<span class="go">&lt;DCIMGFile shape=2450x2048x2048 dtype=&lt;class &#39;numpy.uint16&#39;&gt;file_name=input_file.dcimg&gt;</span>
+</pre></div>
+</div>
+<p>Image data can then be accessed using NumPy’s basic indexing:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_file</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">array([[101, 104, 100,  99,  89],</span>
+<span class="go">       [103, 102, 103,  99, 102],</span>
+<span class="go">       [101, 104,  99, 108,  98],</span>
+<span class="go">       [102, 111,  99, 111,  95],</span>
+<span class="go">       [103,  98,  99, 104, 106]], dtype=uint16)</span>
+</pre></div>
+</div>
+<p>Other convenience methods for accessing image data are: <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice" title="dcimg.DCIMGFile.zslice"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">zslice</span></code></a>,
+<a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice_idx" title="dcimg.DCIMGFile.zslice_idx"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">zslice_idx</span></code></a>, <a class="reference internal" href="../index.html#dcimg.DCIMGFile.frame" title="dcimg.DCIMGFile.frame"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">frame</span></code></a> and <a class="reference internal" href="../index.html#dcimg.DCIMGFile.whole" title="dcimg.DCIMGFile.whole"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">whole</span></code></a>.</p>
+<p><a class="reference internal" href="../index.html#dcimg.DCIMGFile" title="dcimg.DCIMGFile"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DCIMGFile</span></code></a> supports context managers:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">DCIMGFile</span><span class="p">(</span><span class="s1">&#39;input_file.dcimg&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">a</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">800</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>NumPy’s basic indexing: <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.indexing.html#arrays-indexing" title="(in NumPy v1.25)"><code class="docutils literal notranslate"><span class="pre">Indexing</span> <span class="pre">routines</span></code></a></p>
+</div>
+<p>To access the whole file as a <a class="reference external" href="https://docs.dask.org/en/stable/array.html" title="(in Dask)"><span class="xref std std-doc">Dask Array</span></a>,
+use <a class="reference internal" href="../index.html#dcimg.DCIMGFile.as_dask_array" title="dcimg.DCIMGFile.as_dask_array"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">as_dask_array()</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_file</span> <span class="o">=</span> <span class="n">DCIMGFile</span><span class="p">(</span><span class="s1">&#39;input_file.dcimg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">da</span> <span class="o">=</span> <span class="n">my_file</span><span class="o">.</span><span class="n">as_dask_array</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="../index.html#dcimg.DCIMGFile.byte_depth" title="dcimg.DCIMGFile.byte_depth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">byte_depth</span></code></a></dt><dd><p>Number of bytes per pixel.</p>
+</dd>
+<dt><strong>bytes_per_img</strong></dt><dd></dd>
+<dt><strong>bytes_per_row</strong></dt><dd></dd>
+<dt><strong>deep_copy_enabled</strong></dt><dd></dd>
+<dt><a class="reference internal" href="../index.html#dcimg.DCIMGFile.dtype" title="dcimg.DCIMGFile.dtype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dtype</span></code></a></dt><dd><p>NumPy numerical dtype.</p>
+</dd>
+<dt><a class="reference internal" href="../index.html#dcimg.DCIMGFile.file_size" title="dcimg.DCIMGFile.file_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">file_size</span></code></a></dt><dd><p>File size in bytes.</p>
+</dd>
+<dt><a class="reference internal" href="../index.html#dcimg.DCIMGFile.framestamps" title="dcimg.DCIMGFile.framestamps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">framestamps</span></code></a></dt><dd><p>Framestamps of all frames.</p>
+</dd>
+<dt><a class="reference internal" href="../index.html#dcimg.DCIMGFile.nfrms" title="dcimg.DCIMGFile.nfrms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nfrms</span></code></a></dt><dd><p>Number of frames (Z planes), same as <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zsize" title="dcimg.DCIMGFile.zsize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">zsize</span></code></a>.</p>
+</dd>
+<dt><a class="reference internal" href="../index.html#dcimg.DCIMGFile.shape" title="dcimg.DCIMGFile.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Shape of the whole image stack.</p>
+</dd>
+<dt><a class="reference internal" href="../index.html#dcimg.DCIMGFile.timestamps" title="dcimg.DCIMGFile.timestamps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">timestamps</span></code></a></dt><dd><p>Timestamps of all frames.</p>
+</dd>
+<dt><strong>xsize</strong></dt><dd></dd>
+<dt><strong>ysize</strong></dt><dd></dd>
+<dt><strong>zsize</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../index.html#dcimg.DCIMGFile.as_dask_array" title="dcimg.DCIMGFile.as_dask_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_dask_array</span></code></a>()</p></td>
+<td><p>Return the whole file as a <a class="reference external" href="https://docs.dask.org/en/stable/array.html" title="(in Dask)"><span class="xref std std-doc">Dask Array</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../index.html#dcimg.DCIMGFile.frame" title="dcimg.DCIMGFile.frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frame</span></code></a>(index[, dtype, copy])</p></td>
+<td><p>Convenience function to retrieve a single frame (Z plane).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../index.html#dcimg.DCIMGFile.ts" title="dcimg.DCIMGFile.ts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ts</span></code></a>(frame)</p></td>
+<td><p>Timestamp of a single frame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../index.html#dcimg.DCIMGFile.whole" title="dcimg.DCIMGFile.whole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">whole</span></code></a>([dtype, copy])</p></td>
+<td><p>Convenience function to retrieve the whole stack.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice" title="dcimg.DCIMGFile.zslice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zslice</span></code></a>(arg1[, arg2, step, dtype, copy])</p></td>
+<td><p>Return a slice along <code class="xref any docutils literal notranslate"><span class="pre">Z</span></code>, i.e. a substack of frames.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice_idx" title="dcimg.DCIMGFile.zslice_idx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">zslice_idx</span></code></a>(index[, frames_per_slice, dtype, ...])</p></td>
+<td><p>Return a slice, i.e. a substack of frames, by index.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>close</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>compute_target_line</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>open</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.FILE_HDR_DTYPE">
+<span class="sig-name descname"><span class="pre">FILE_HDR_DTYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('file_format',</span> <span class="pre">'S8'),</span> <span class="pre">('format_version',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip',</span> <span class="pre">'5&lt;u4'),</span> <span class="pre">('nsess',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('nfrms',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('header_size',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip2',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('file_size',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip3',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('file_size2',</span> <span class="pre">'&lt;u8')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.FILE_HDR_DTYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.FMT_NEW">
+<span class="sig-name descname"><span class="pre">FMT_NEW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#dcimg.DCIMGFile.FMT_NEW" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.FMT_OLD">
+<span class="sig-name descname"><span class="pre">FMT_OLD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#dcimg.DCIMGFile.FMT_OLD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.NEW_CROP_INFO">
+<span class="sig-name descname"><span class="pre">NEW_CROP_INFO</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('x0',</span> <span class="pre">'&lt;u2'),</span> <span class="pre">('xsize',</span> <span class="pre">'&lt;u2'),</span> <span class="pre">('y0',</span> <span class="pre">'&lt;u2'),</span> <span class="pre">('ysize',</span> <span class="pre">'&lt;u2')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.NEW_CROP_INFO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.NEW_FRAME_FOOTER_CAMLINK_DTYPE">
+<span class="sig-name descname"><span class="pre">NEW_FRAME_FOOTER_CAMLINK_DTYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('progressive_number',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('timestamp',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('timestamp_frac',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('4px',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('zeros',</span> <span class="pre">'3&lt;u4')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.NEW_FRAME_FOOTER_CAMLINK_DTYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.NEW_FRAME_FOOTER_USB_DTYPE">
+<span class="sig-name descname"><span class="pre">NEW_FRAME_FOOTER_USB_DTYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('progressive_number',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('timestamp',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('timestamp_frac',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('zeros',</span> <span class="pre">'&lt;u4')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.NEW_FRAME_FOOTER_USB_DTYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.NEW_SESSION_HEADER_DTYPE">
+<span class="sig-name descname"><span class="pre">NEW_SESSION_HEADER_DTYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('session_size',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip1',</span> <span class="pre">'13&lt;u4'),</span> <span class="pre">('nfrms',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('byte_depth',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip2',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('xsize',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('ysize',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('bytes_per_row',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('bytes_per_img',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip3',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('offset_to_data',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip4',</span> <span class="pre">'5&lt;u4'),</span> <span class="pre">('frame_footer_size',</span> <span class="pre">'&lt;u4')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.NEW_SESSION_HEADER_DTYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.SESSION_FOOTER2_DTYPE">
+<span class="sig-name descname"><span class="pre">SESSION_FOOTER2_DTYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('offset_to_offset_to_timestamps',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip0',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('offset_to_offset_to_frame_counts',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip1',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('offset_to_offset_to_4px',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip2',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('offset_to_frame_counts',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip3',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('offset_to_timestamps',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip4',</span> <span class="pre">'4&lt;u4'),</span> <span class="pre">('offset_to_4px',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip5',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('4px_offset_in_frame',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('4px_size',</span> <span class="pre">'&lt;u8')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.SESSION_FOOTER2_DTYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.SESSION_FOOTER_DTYPE">
+<span class="sig-name descname"><span class="pre">SESSION_FOOTER_DTYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('format_version',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip0',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('offset_to_2nd_struct',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip1',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('offset_to_offset_to_end_of_data',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip2',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('footer_size',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip3',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('2nd_footer_size',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip4',</span> <span class="pre">'19&lt;u4'),</span> <span class="pre">('offset_to_end_of_data',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip5',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('offset_to_end_of_data_again',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip6',</span> <span class="pre">'&lt;u8')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.SESSION_FOOTER_DTYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.SESS_HDR_DTYPE">
+<span class="sig-name descname"><span class="pre">SESS_HDR_DTYPE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[('session_size',</span> <span class="pre">'&lt;u8'),</span> <span class="pre">('skip1',</span> <span class="pre">'6&lt;u4'),</span> <span class="pre">('nfrms',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('byte_depth',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip2',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('xsize',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('bytes_per_row',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('ysize',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('bytes_per_img',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('skip3',</span> <span class="pre">'2&lt;u4'),</span> <span class="pre">('offset_to_data',</span> <span class="pre">'&lt;u4'),</span> <span class="pre">('session_data_size',</span> <span class="pre">'&lt;u8')]</span></em><a class="headerlink" href="#dcimg.DCIMGFile.SESS_HDR_DTYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.as_dask_array">
+<span class="sig-name descname"><span class="pre">as_dask_array</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.as_dask_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the whole file as a <a class="reference external" href="https://docs.dask.org/en/stable/array.html" title="(in Dask)"><span class="xref std std-doc">Dask Array</span></a>.</p>
+<p><a class="reference external" href="https://docs.dask.org/en/stable/index.html" title="(in Dask)"><span class="xref std std-doc">Dask</span></a> needs to be installed.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.byte_depth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">byte_depth</span></span><a class="headerlink" href="#dcimg.DCIMGFile.byte_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes per pixel.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.bytes_per_img">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bytes_per_img</span></span><a class="headerlink" href="#dcimg.DCIMGFile.bytes_per_img" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.bytes_per_row">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bytes_per_row</span></span><a class="headerlink" href="#dcimg.DCIMGFile.bytes_per_row" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.compute_target_line">
+<span class="sig-name descname"><span class="pre">compute_target_line</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.compute_target_line" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.deep_copy_enabled">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deep_copy_enabled</span></span><a class="headerlink" href="#dcimg.DCIMGFile.deep_copy_enabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.dtype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#dcimg.DCIMGFile.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>NumPy numerical dtype.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.file_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">file_size</span></span><a class="headerlink" href="#dcimg.DCIMGFile.file_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>File size in bytes.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.first_4px_correction_enabled">
+<span class="sig-name descname"><span class="pre">first_4px_correction_enabled</span></span><a class="headerlink" href="#dcimg.DCIMGFile.first_4px_correction_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>For some reason, the first 4 pixels of each frame (or the first 4
+pixels of line number 1023 of each frame) are stored in a different
+area in the file. This switch enables retrieving those 4 pixels. If
+False, those pixels are set to 0. If None, they are left unchanged.
+Actually, when the <a class="reference internal" href="../index.html#dcimg.DCIMGFile.dtype" title="dcimg.DCIMGFile.dtype"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dtype</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">uint8</span></code>, this affects the first 8 pixels.
+In any case this affects 8 bytes. Defaults to True.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.frame">
+<span class="sig-name descname"><span class="pre">frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to retrieve a single frame (Z plane).</p>
+<p>Same as calling <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice_idx" title="dcimg.DCIMGFile.zslice_idx"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">zslice_idx</span></code></a> and squeezing.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>index</strong><span class="classifier">int</span></dt><dd><p>frame index</p>
+</dd>
+<dt><strong>dtype</strong></dt><dd></dd>
+<dt><strong>copy</strong><span class="classifier">see <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice" title="dcimg.DCIMGFile.zslice"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">zslice</span></code></a></span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></dt><dd><p>A numpy array of the original type or of <a class="reference internal" href="../index.html#dcimg.DCIMGFile.dtype" title="dcimg.DCIMGFile.dtype"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dtype</span></code></a>, if specified. The
+shape of the array is (<a class="reference internal" href="../index.html#dcimg.DCIMGFile.ysize" title="dcimg.DCIMGFile.ysize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ysize</span></code></a>, <a class="reference internal" href="../index.html#dcimg.DCIMGFile.xsize" title="dcimg.DCIMGFile.xsize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">xsize</span></code></a>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.framestamps">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">framestamps</span></span><a class="headerlink" href="#dcimg.DCIMGFile.framestamps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Framestamps of all frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></dt><dd><p>A numpy array of dtype <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.uint32" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.uint32</span></code></a> with framestamps.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.mm">
+<span class="sig-name descname"><span class="pre">mm</span></span><a class="headerlink" href="#dcimg.DCIMGFile.mm" title="Permalink to this definition">¶</a></dt>
+<dd><p>a <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.memmap.html#numpy.memmap" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.memmap</span></code></a> object with the raw contents of the DCIMG file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.mma">
+<span class="sig-name descname"><span class="pre">mma</span></span><a class="headerlink" href="#dcimg.DCIMGFile.mma" title="Permalink to this definition">¶</a></dt>
+<dd><p>memory-mapped <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> of the image data, without 4px
+correction.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.nfrms">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nfrms</span></span><a class="headerlink" href="#dcimg.DCIMGFile.nfrms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of frames (Z planes), same as <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zsize" title="dcimg.DCIMGFile.zsize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">zsize</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#dcimg.DCIMGFile.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shape of the whole image stack.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>tuple</dt><dd><p>(<a class="reference internal" href="../index.html#dcimg.DCIMGFile.zsize" title="dcimg.DCIMGFile.zsize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">zsize</span></code></a>, <a class="reference internal" href="../index.html#dcimg.DCIMGFile.ysize" title="dcimg.DCIMGFile.ysize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ysize</span></code></a>, <a class="reference internal" href="../index.html#dcimg.DCIMGFile.xsize" title="dcimg.DCIMGFile.xsize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">xsize</span></code></a>)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.timestamps">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">timestamps</span></span><a class="headerlink" href="#dcimg.DCIMGFile.timestamps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamps of all frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></dt><dd><p>A numpy array of dtype <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.datetime64" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.datetime64</span></code></a> with frame timestamps.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.ts">
+<span class="sig-name descname"><span class="pre">ts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.ts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timestamp of a single frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>frame</strong><span class="classifier">int</span></dt><dd><p>Frame index</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.datetime64" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.datetime64</span></code></a></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.whole">
+<span class="sig-name descname"><span class="pre">whole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.whole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to retrieve the whole stack.</p>
+<p>Equivalent to call <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice_idx" title="dcimg.DCIMGFile.zslice_idx"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">zslice_idx</span></code></a> with <code class="xref any docutils literal notranslate"><span class="pre">index</span></code> = 0 and
+<code class="xref any docutils literal notranslate"><span class="pre">frames_per_slice</span></code> = <a class="reference internal" href="../index.html#dcimg.DCIMGFile.nfrms" title="dcimg.DCIMGFile.nfrms"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">nfrms</span></code></a></p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>dtype</strong></dt><dd></dd>
+<dt><strong>copy</strong><span class="classifier">see <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice" title="dcimg.DCIMGFile.zslice"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">zslice</span></code></a></span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></dt><dd><p>A numpy array of the original type or of dtype, if specified. The
+shape of the array is <a class="reference internal" href="../index.html#dcimg.DCIMGFile.shape" title="dcimg.DCIMGFile.shape"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">shape</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.xsize">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">xsize</span></span><a class="headerlink" href="#dcimg.DCIMGFile.xsize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.ysize">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ysize</span></span><a class="headerlink" href="#dcimg.DCIMGFile.ysize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.zsize">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zsize</span></span><a class="headerlink" href="#dcimg.DCIMGFile.zsize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.zslice">
+<span class="sig-name descname"><span class="pre">zslice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.zslice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a slice along <code class="xref any docutils literal notranslate"><span class="pre">Z</span></code>, i.e. a substack of frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>arg1</strong><span class="classifier">int</span></dt><dd><p>Mandatory argument, will be passed to <a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.11)"><code class="docutils literal notranslate"><span class="pre">slice</span></code></a>
+If arg2 and step are both None, it will be passed as <code class="xref any docutils literal notranslate"><span class="pre">slice(arg1)</span></code>,
+i.e. it would act as the stop argument.</p>
+</dd>
+<dt><strong>arg2</strong><span class="classifier">int</span></dt><dd><p>If not null, will be passed as <code class="xref any docutils literal notranslate"><span class="pre">slice(arg1,</span> <span class="pre">arg2,</span> <span class="pre">step)</span></code></p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>If not null, will be passed as <code class="xref any docutils literal notranslate"><span class="pre">slice(arg1,</span> <span class="pre">arg2,</span> <span class="pre">step)</span></code></p>
+</dd>
+<dt><strong>dtype</strong></dt><dd></dd>
+<dt><strong>copy</strong><span class="classifier">bool</span></dt><dd><p>If True, the requested slice is copied to memory. Otherwise a
+memory mapped array is returned.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></dt><dd><p>A numpy array of the original type or of <a class="reference internal" href="../index.html#dcimg.DCIMGFile.dtype" title="dcimg.DCIMGFile.dtype"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dtype</span></code></a>, if specified. The
+shape of the array is (<code class="xref any docutils literal notranslate"><span class="pre">end_frame</span></code> - <code class="xref any docutils literal notranslate"><span class="pre">start_frame</span></code>, <a class="reference internal" href="../index.html#dcimg.DCIMGFile.ysize" title="dcimg.DCIMGFile.ysize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ysize</span></code></a>,
+<a class="reference internal" href="../index.html#dcimg.DCIMGFile.xsize" title="dcimg.DCIMGFile.xsize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">xsize</span></code></a>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="dcimg.DCIMGFile.zslice_idx">
+<span class="sig-name descname"><span class="pre">zslice_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames_per_slice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dcimg.DCIMGFile.zslice_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a slice, i.e. a substack of frames, by index.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>index</strong><span class="classifier">int</span></dt><dd><p>slice index</p>
+</dd>
+<dt><strong>frames_per_slice</strong><span class="classifier">int</span></dt><dd><p>number of frames per slice</p>
+</dd>
+<dt><strong>dtype</strong></dt><dd></dd>
+<dt><strong>copy</strong><span class="classifier">see <a class="reference internal" href="../index.html#dcimg.DCIMGFile.zslice" title="dcimg.DCIMGFile.zslice"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">zslice</span></code></a></span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></dt><dd><p>A numpy array of the original type or of <a class="reference internal" href="../index.html#dcimg.DCIMGFile.dtype" title="dcimg.DCIMGFile.dtype"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dtype</span></code></a>, if specified. The
+shape of the array is  (<code class="xref any docutils literal notranslate"><span class="pre">frames_per_slice</span></code>, <a class="reference internal" href="../index.html#dcimg.DCIMGFile.ysize" title="dcimg.DCIMGFile.ysize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ysize</span></code></a>, <a class="reference internal" href="../index.html#dcimg.DCIMGFile.xsize" title="dcimg.DCIMGFile.xsize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">xsize</span></code></a>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2020, Giacomo Mazzamuto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
