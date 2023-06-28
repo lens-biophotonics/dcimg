@@ -171,16 +171,3 @@ texinfo_documents = [
      author, 'dcimg', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-from sphinx.ext.autodoc import (
-    ClassLevelDocumenter, InstanceAttributeDocumenter)
-
-
-def iad_add_directive_header(self, sig):
-    ClassLevelDocumenter.add_directive_header(self, sig)
-
-InstanceAttributeDocumenter.add_directive_header = iad_add_directive_header
-
-
-def setup(app):
-    app.add_js_file('https://docs.python.org/3/_static/copybutton.js')

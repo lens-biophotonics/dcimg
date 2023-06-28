@@ -4,4 +4,4 @@
 #
 #    pip-compile requirements.in
 #
-numpy==1.19.4             # via -r requirements.in
+numpy==1.24.4             # via -r requirements.in
