@@ -39,5 +39,10 @@ with DCIMGFile('input_file.dcimg') as f:
      a = f[800, ...]
 ```
 
+To access the whole file as a Dask Array, use `as_dask_array()`:
+```python
+my_file = DCIMGFile('input_file.dcimg')
+da = my_file.as_dask_array()
+```
 For further details refer to:
 https://lens-biophotonics.github.io/dcimg/

@@ -47,6 +47,7 @@ extensions = [
 intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable', None),
     'python': ('https://docs.python.org/3', None),
+    'dask': ('https://docs.dask.org/en/stable/', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.

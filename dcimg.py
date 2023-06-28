@@ -53,6 +53,11 @@ file_name=input_file.dcimg>
 
     .. seealso:: NumPy's basic indexing: `numpy:arrays.indexing`
 
+    To access the whole file as a :external+dask:doc:`Dask Array<array>`,
+    use `as_dask_array()`:
+
+    >>> my_file = DCIMGFile('input_file.dcimg')
+    >>> da = my_file.as_dask_array()
     """
 
     FILE_HDR_DTYPE = [
@@ -736,3 +741,17 @@ file_name=input_file.dcimg>
             shape of the array is (`ysize`, `xsize`).
         """
         return np.squeeze(self.zslice_idx(index, dtype=dtype, copy=copy))
+
+    def as_dask_array(self):
+        """Return the whole file as a :external+dask:doc:`Dask Array<array>`.
+
+        :external+dask:doc:`Dask <index>` needs to be installed.
+        """
+        import dask.array as da
+        from dask import delayed
+
+        delayed_reader = delayed(self.frame)
+        lazy_arrays = [delayed_reader(f) for f in range(self.nfrms)]
+        dask_arrays = [da.from_delayed(delayed_reader, shape=(self.ysize, self.xsize), dtype=self.dtype)
+                       for delayed_reader in lazy_arrays]
+        return da.stack(dask_arrays, axis=0)
