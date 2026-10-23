@@ -59,6 +59,21 @@ test_vectors = [
     np.index_exp[:3000, :3000, :3000],
     np.index_exp[:, 0:0:1, :],
     np.index_exp[..., 0:0:1],
+    np.index_exp[5, 1022, 0],
+    np.index_exp[5, 1022, :4],
+    np.index_exp[5, :1023, :4],
+    np.index_exp[5, 1000:1023, :4],
+    np.index_exp[5, 1000:1030, :4],
+    np.index_exp[:, ::2, :4],
+    np.index_exp[:, 1::2, :4],
+    np.index_exp[5, 1030:1000:-1, :4],
+    np.index_exp[5, 1023:1000:-2, :4],
+    np.index_exp[5, ::-1, :4],
+    np.index_exp[5, 1021:1030:3, :4],
+    np.index_exp[-3:, :50, :4],
+    np.index_exp[::-2, 0, ::-1],
+    np.index_exp[np.int64(5), np.int64(0), np.int64(1)],
+    np.index_exp[np.int64(5), 1023, :8],
 ]
 
 
@@ -173,7 +188,7 @@ class TestDCIMGFILE(unittest.TestCase):
         self.assertEqual(slice(42), DCIMGFile._args_to_slice(None, 42, None))
 
 
-def _write_dcimg(path, frames, fmt):
+def _write_dcimg(path, frames, fmt, px4=None, px4_row=0):
     """Write a minimal DCIMG file holding `frames` (nfrms, ysize, xsize)."""
     nfrms, ysize, xsize = frames.shape
     header_size = 232
@@ -217,6 +232,13 @@ def _write_dcimg(path, frames, fmt):
         footer = np.zeros(1, DCIMGFile.SESSION_FOOTER_DTYPE)
         footer['offset_to_2nd_struct'] = footer.nbytes
         footer2 = np.zeros(1, DCIMGFile.SESSION_FOOTER2_DTYPE)
+        if px4 is not None:
+            offset_to_4px = 512 + 12 * nfrms
+            footer['footer_size'] = offset_to_4px + 8 * nfrms
+            footer2['offset_to_4px'] = offset_to_4px
+            footer2['4px_offset_in_frame'] = px4_row * xsize * 2
+            i = data_end + offset_to_4px
+            buf[i:i + px4.nbytes] = px4.astype('<u2').tobytes()
         buf[data_end:data_end + footer.nbytes] = footer.tobytes()
         i = data_end + footer.nbytes
         buf[i:i + footer2.nbytes] = footer2.tobytes()
@@ -243,6 +265,26 @@ class TestDCIMGFileOnDisk(unittest.TestCase):
                 self.assertTrue(np.array_equal(f[..., -5:], frames[..., -5:]))
                 self.assertTrue(np.array_equal(f[1, -2, ::-1], frames[1, -2, ::-1]))
                 f.close()
+
+    def testOld4pxOnTargetLine(self):
+        # the 4px data replaces the first 4 pixels of row 3, not of row 0
+        frames = np.arange(3 * 6 * 16, dtype=np.uint16).reshape((3, 6, 16))
+        px4 = 60000 + np.arange(3 * 4, dtype=np.uint16).reshape((3, 4))
+        a_ok = frames.copy()
+        a_ok[:, 3, :4] = px4
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, 'test.dcimg')
+            _write_dcimg(path, frames, DCIMGFile.FMT_OLD, px4, px4_row=3)
+            f = DCIMGFile(path)
+            self.assertTrue(f._has_4px_data)
+            self.assertEqual(f._target_line, 3)
+            self.assertTrue(np.array_equal(f.whole(), a_ok))
+            for idx in [np.index_exp[1, 3, 0], np.index_exp[1, 2, 0],
+                        np.index_exp[:, 0:3, :4], np.index_exp[:, 2:5, :4],
+                        np.index_exp[:, :4, :2], np.index_exp[:, ::-1, :],
+                        np.index_exp[2, 3]]:
+                self.assertTrue(np.array_equal(f[idx], a_ok[idx]), idx)
+            f.close()
 
 
 if __name__ == '__main__':

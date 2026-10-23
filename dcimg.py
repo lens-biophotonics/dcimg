@@ -9,8 +9,8 @@
 """This module provides the `DCIMGFile` class for accessing Hamamatsu DCIMG
 files."""
 
-import math
 import logging
+import operator
 from pathlib import Path
 
 import numpy as np
@@ -474,131 +474,72 @@ file_name=input_file.dcimg>
         if self.first_4px_correction_enabled is None:
             return a
 
-        if a.size == 0:
+        if a.size == 0 or not self._has_4px_data:
             return a
 
-        # ensure item is a tuple
-        if isinstance(item, list):
-            item = tuple(item)
+        z, y, x = self._expand_index(item)
+
+        # the 4px correction applies to row `_target_line`, columns 0..n-1
+        n = self._4px.shape[-1]
+        rows = range(y, y + 1) if isinstance(y, int) else y
+        if self._target_line not in rows:
+            return a
+        if isinstance(x, int):
+            if x >= n:
+                return a
+            cols = x
         else:
-            item = np.index_exp[item]
-
-        # ensure all items are slice objects
-        myitem = []
-        for i in item:
-            if isinstance(i, int):
-                start = i
-                stop = i + 1
-                step = 1
-            elif i is Ellipsis:
-                for _ in range(0, 3 - len(item) + 1):
-                    myitem.append(slice(0, self.shape[len(myitem)], 1))
-                continue
-            elif isinstance(i, slice):
-                start = i.start
-                stop = i.stop
-                step = i.step if i.step is not None else 1
-            else:
-                raise TypeError("Invalid type: {}".format(type(i)))
-
-            curr_max = self.shape[len(myitem)]
-            if start is None:
-                start = 0 if step > 0 else curr_max
-            elif start < 0:
-                start += curr_max
-                if stop is not None:
-                    stop += curr_max
-            elif start > curr_max:
-                start = curr_max
-
-            if stop is None:
-                stop = curr_max if step > 0 else 0
-            elif stop < 0:
-                stop += curr_max
-            elif stop > curr_max:
-                stop = curr_max
-
-            myitem.append(slice(start, stop, step))
-
-        for _ in range(0, 3 - len(myitem)):
-            myitem.append(slice(0, self.shape[len(myitem)], 1))
-
-        startx = myitem[2].start
-        stopx = myitem[2].stop
-        stepx = myitem[2].step
-
-        starty = myitem[1].start
-        stopy = myitem[1].stop
-        stepy = myitem[1].step
-
-        target_line = self._target_line
-        condition_y = False
-        if self.fmt_version == self.FMT_OLD and self._has_4px_data:
-            condition_y = starty == 0 or stopy == 0
-        elif self.fmt_version == self.FMT_NEW and self._has_4px_data:
-            if stepy > 0:
-                condition_y = starty <= target_line <= stopy
-            elif stepy < 0:
-                condition_y = stopy <= target_line <= starty
-
-        n = 8 // self.byte_depth
-
-        if condition_y and ((0 <= startx < n) or stopx < n):
-            if a.size == 1:
-                if self.first_4px_correction_enabled:
-                    a = self._4px[myitem[0].start, startx]
-                else:
-                    a = 0
+            cols = [c for c in x if c < n]
+            if not cols:
                 return a
 
-            if startx < stopx:
-                newstartx = 0
-                if stopx > n:
-                    newstopx = int(math.ceil((n - startx) / abs(stepx)))
-                else:
-                    newstopx = (stopx - startx) // abs(stepx)
+        a = np.array(a)  # writeable copy, also when a is a NumPy scalar
+
+        a_index = []
+        if not isinstance(z, int):
+            z = slice(z.start, z.stop if z.stop >= 0 else None, z.step)
+            a_index.append(slice(None))
+        if not isinstance(y, int):
+            a_index.append(rows.index(self._target_line))
+        if not isinstance(x, int):
+            a_index.append([i for i, c in enumerate(x) if c < n])
+
+        if self.first_4px_correction_enabled:
+            a[tuple(a_index)] = self._4px[z][..., cols]
+        else:
+            a[tuple(a_index)] = 0
+
+        return a[()] if a.ndim == 0 else a
+
+    def _expand_index(self, item):
+        """Expand a basic index into one entry per axis (Z, Y, X).
+
+        Integers are made non-negative and slices become `range` objects
+        holding the selected indices, so that each entry tells exactly which
+        frames, rows or columns `item` selects.
+        """
+        if not isinstance(item, tuple):
+            item = (item,)
+
+        expanded = []
+        for i in item:
+            if i is Ellipsis:
+                expanded.extend([slice(None)] * (3 - len(item) + 1))
             else:
-                newstopx = a.shape[-1]
-                if a.shape[-1] < n:
-                    newstartx = 0
-                else:
-                    newstartx = (a.shape[-1] - n // abs(stepx))
+                expanded.append(i)
+        expanded.extend([slice(None)] * (3 - len(expanded)))
 
-            if newstartx == newstopx:
-                return np.empty([0])
-
-            newshape = [math.ceil(
-                (myitem[i].stop - myitem[i].start) / myitem[i].step)
-                for i in range(0, 3)]
-
-            old_shape = a.shape
-
-            a.shape = newshape
-
-            newy = int(math.floor((target_line - starty) / stepy))
-            if stepy < 0:
-                newy -= 1
-
-            a_index_exp = np.index_exp[..., newy, newstartx:newstopx]
-
-            if not a.flags.writeable:
-                a = np.copy(a)
-
-            if self.first_4px_correction_enabled:
-                _range = sorted((startx, stopx))
-                _4start = max(0, _range[0])
-                _4stop = min(8 // self.byte_depth, _range[1])
-                _4px = self._4px[item[0], _4start:_4stop:abs(stepx)]
-
-                if stepx < 0:
-                    _4px = _4px[..., ::-1]
-                a[a_index_exp] = _4px
-            else:
-                a[a_index_exp] = 0
-
-            a.shape = old_shape
-
-        return a
+        out = []
+        for i, size in zip(expanded, self.shape):
+            if isinstance(i, slice):
+                out.append(range(*i.indices(size)))
+                continue
+            try:
+                i = operator.index(i)
+            except TypeError:
+                raise TypeError("Invalid type: {}".format(type(i)))
+            out.append(i + size if i < 0 else i)
+        return out
 
     @property
     def framestamps(self):
