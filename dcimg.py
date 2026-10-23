@@ -198,16 +198,18 @@ file_name=input_file.dcimg>
         self._target_line = -1  #: target line for 4px correction
 
         self.first_4px_correction_enabled = True
-        """For some reason, the first 4 pixels of each frame (or the first 4
-        pixels of line number 1023 of each frame) are stored in a different
-        area in the file. This switch enables retrieving those 4 pixels. If
+        """Some DCIMG files store, in a separate area, the true values of the
+        first 4 pixels of a specific line of each frame (`_target_line`; the
+        line is given by the file footer, it is e.g. line 1023 for many
+        camera-link files). This switch enables retrieving those 4 pixels. If
         False, those pixels are set to 0. If None, they are left unchanged.
-        Actually, when the `dtype` is `uint8`, this affects the first 8 pixels.
-        In any case this affects 8 bytes. Defaults to True."""
+        When the `dtype` is `uint8`, this affects the first 8 pixels (8 bytes
+        in any case). Defaults to True."""
 
         self._4px = None
-        """A `numpy.ndarray` of shape (`nfrms`, 4) containing the first 4
-        pixels of each frame."""
+        """A `numpy.ndarray` of shape (`nfrms`, 4), or (`nfrms`, 8) when the
+        `dtype` is `uint8`, containing the corrected pixels of the target
+        line."""
 
         if file_path is not None:
             self.open()
