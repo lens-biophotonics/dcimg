@@ -186,6 +186,7 @@ file_name=input_file.dcimg>
         self._sess_header = None
         self._sess_footer = None
         self._sess_footer2 = None
+        self._format_version = None
         self._ts_data = None  #: timestamp data
         self._fs_data = None  #: framestamp data
         self.file_path = file_path
@@ -239,17 +240,17 @@ file_name=input_file.dcimg>
     @property
     def file_size(self):
         """File size in bytes."""
-        return int(self._file_header['file_size'][0])
+        return self._file_header['file_size'].item()
 
     @property
     def nfrms(self):
         """Number of frames (Z planes), same as `zsize`."""
-        return int(self._sess_header['nfrms'][0])
+        return self._sess_header['nfrms'].item()
 
     @property
     def byte_depth(self):
         """Number of bytes per pixel."""
-        return int(self._sess_header['byte_depth'][0])
+        return self._sess_header['byte_depth'].item()
 
     @property
     def dtype(self):
@@ -261,11 +262,11 @@ file_name=input_file.dcimg>
 
     @property
     def xsize(self):
-        return int(self._sess_header['xsize'][0])
+        return self._sess_header['xsize'].item()
 
     @property
     def ysize(self):
-        return int(self._sess_header['ysize'][0])
+        return self._sess_header['ysize'].item()
 
     @property
     def zsize(self):
@@ -273,11 +274,11 @@ file_name=input_file.dcimg>
 
     @property
     def bytes_per_row(self):
-        return int(self._sess_header['bytes_per_row'][0])
+        return self._sess_header['bytes_per_row'].item()
 
     @property
     def bytes_per_img(self):
-        return int(self._sess_header['bytes_per_img'][0])
+        return self._sess_header['bytes_per_img'].item()
 
     @property
     def shape(self):
@@ -292,17 +293,17 @@ file_name=input_file.dcimg>
 
     @property
     def _header_size(self):
-        return int(self._file_header['header_size'][0])
+        return self._file_header['header_size'].item()
 
     @property
     def _session_footer_offset(self):
         sess_data_size = None
         if self.fmt_version == self.FMT_OLD:
-            sess_data_size = int(self._sess_header['session_data_size'][0])
+            sess_data_size = self._sess_header['session_data_size'].item()
         elif self.fmt_version == self.FMT_NEW:
-            sess_data_size = \
-                self._sess_header['offset_to_data'][0] \
-                + (int(self._sess_header['bytes_per_img'][0] + 8) * self.nfrms)
+            sess_data_size = (self._sess_header['offset_to_data'].item()
+                              + (self._sess_header['bytes_per_img'].item()
+                                 + 8) * self.nfrms)
         return self._header_size + sess_data_size
 
     def open(self, file_path=None):
@@ -321,18 +322,18 @@ file_name=input_file.dcimg>
 
         bd = self.byte_depth
         data_strides = None
-        data_offset = (int(self._file_header['header_size'][0])
-                       + int(self._sess_header['offset_to_data'][0]))
+        data_offset = (self._header_size
+                       + self._sess_header['offset_to_data'].item())
         frame_footer_size = None
         if self.fmt_version == self.FMT_OLD:
             if self._has_4px_data:
-                offset = self._session_footer_offset \
-                         + int(self._sess_footer2['offset_to_4px'][0])
+                offset = (self._session_footer_offset
+                          + self._sess_footer2['offset_to_4px'].item())
                 self._4px = np.ndarray(
                     (self.nfrms, 4), self.dtype, self.mm, offset)
             data_strides = (self.bytes_per_img, self.bytes_per_row, bd)
         elif self.fmt_version == self.FMT_NEW:
-            frame_footer_size = int(self._sess_header['frame_footer_size'][0])
+            frame_footer_size = self._sess_header['frame_footer_size'].item()
             strides = (self.bytes_per_img + frame_footer_size, bd)
             if self._has_4px_data:
                 self._4px = np.ndarray((self.nfrms, 8 // self.byte_depth), self.dtype, self.mm,
@@ -349,7 +350,7 @@ file_name=input_file.dcimg>
 
         if self.fmt_version == DCIMGFile.FMT_OLD:
             # framestamp offset
-            offset = int(self._session_footer_offset + 272)
+            offset = self._session_footer_offset + 272
             self._fs_data = np.ndarray(self.nfrms, np.uint32, self.mm, offset)
 
             # timestamp offset
@@ -359,7 +360,7 @@ file_name=input_file.dcimg>
         elif self.fmt_version == DCIMGFile.FMT_NEW:
             # framestamps
             offset = (self._header_size
-                      + int(self._sess_header['offset_to_data'][0])
+                      + self._sess_header['offset_to_data'].item()
                       + self.bytes_per_img)
             strides = self.bytes_per_img + frame_footer_size
             self._fs_data = np.ndarray(
@@ -377,11 +378,11 @@ file_name=input_file.dcimg>
         if self.fmt_version == DCIMGFile.FMT_OLD:
             if self._has_4px_data:
                 self._target_line = (
-                    int(self._sess_footer2['4px_offset_in_frame'][0])
+                    self._sess_footer2['4px_offset_in_frame'].item()
                     // self.bytes_per_row)
             else:
                 self._target_line = -1
-        elif self._file_header['format_version'] == 0x2000000:
+        elif self._format_version == 0x2000000:
             self._target_line = 0
         else:
             self._target_line = (1023 - self.y0) // self.binning
@@ -392,18 +393,20 @@ file_name=input_file.dcimg>
     def _parse_header(self):
         self._file_header = np.ndarray((1,), self.FILE_HDR_DTYPE, self.mm)
 
-        if not self._file_header['file_format'] == b'DCIMG':
+        if self._file_header['file_format'].item() != b'DCIMG':
             raise ValueError('Invalid DCIMG file')
 
-        if self._file_header['format_version'] == 0x7:
+        self._format_version = self._file_header['format_version'].item()
+
+        if self._format_version == 0x7:
             sess_dtype = self.SESS_HDR_DTYPE
             self.fmt_version = self.FMT_OLD
-        elif self._file_header['format_version'] == 0x1000000 or self._file_header['format_version'] == 0x2000000:
+        elif self._format_version == 0x1000000 or self._format_version == 0x2000000:
             self.fmt_version = self.FMT_NEW
             sess_dtype = self.NEW_SESSION_HEADER_DTYPE
         else:
             raise ValueError('Invalid DCIMG format version: 0x{:04x}'.format(
-                self._file_header['format_version'][0]))
+                self._format_version))
 
         self._sess_header = np.ndarray((1,), sess_dtype, self.mm,
                                        offset=self._header_size)
@@ -412,10 +415,10 @@ file_name=input_file.dcimg>
             i = self._header_size + 712
             crop_info = np.ndarray((1,), self.NEW_CROP_INFO, self.mm, i)
 
-            self.x0 = int(crop_info['x0'][0])
-            self.y0 = int(crop_info['y0'][0])
-            binning_x = crop_info['xsize'][0] // self.xsize
-            binning_y = crop_info['ysize'][0] // self.ysize
+            self.x0 = crop_info['x0'].item()
+            self.y0 = crop_info['y0'].item()
+            binning_x = crop_info['xsize'].item() // self.xsize
+            binning_y = crop_info['ysize'].item() // self.ysize
 
             if binning_x != binning_y:
                 raise ValueError('different binning in X and Y')
@@ -439,7 +442,7 @@ file_name=input_file.dcimg>
                                        self._session_footer_offset)
 
         offset = (self._session_footer_offset
-                  + int(self._sess_footer['offset_to_2nd_struct'][0]))
+                  + self._sess_footer['offset_to_2nd_struct'].item())
 
         self._sess_footer2 = \
             np.ndarray((1,), self.SESSION_FOOTER2_DTYPE, self.mm, offset)
@@ -454,15 +457,16 @@ file_name=input_file.dcimg>
         bool
         """
         if self.fmt_version == self.FMT_NEW:
-            if self._sess_header['frame_footer_size'] >= 512:
+            frame_footer_size = self._sess_header['frame_footer_size'].item()
+            if frame_footer_size >= 512:
                 return True
-            return np.dtype(self.NEW_FRAME_FOOTER_CAMLINK_DTYPE).itemsize == self._sess_header['frame_footer_size']
+            return np.dtype(self.NEW_FRAME_FOOTER_CAMLINK_DTYPE).itemsize == frame_footer_size
 
         # maybe this is sufficient
-        # return int(self._sess_footer2['4px_size']) > 0
+        # return self._sess_footer2['4px_size'].item() > 0
 
-        footer_size = int(self._sess_footer['footer_size'][0])
-        offset_to_4px = int(self._sess_footer2['offset_to_4px'][0])
+        footer_size = self._sess_footer['footer_size'].item()
+        offset_to_4px = self._sess_footer2['offset_to_4px'].item()
 
         return footer_size == offset_to_4px + 8 * self.nfrms
 
