@@ -237,17 +237,17 @@ file_name=input_file.dcimg>
     @property
     def file_size(self):
         """File size in bytes."""
-        return self._file_header['file_size'][0]
+        return int(self._file_header['file_size'][0])
 
     @property
     def nfrms(self):
         """Number of frames (Z planes), same as `zsize`."""
-        return self._sess_header['nfrms'][0]
+        return int(self._sess_header['nfrms'][0])
 
     @property
     def byte_depth(self):
         """Number of bytes per pixel."""
-        return self._sess_header['byte_depth'][0]
+        return int(self._sess_header['byte_depth'][0])
 
     @property
     def dtype(self):
@@ -259,11 +259,11 @@ file_name=input_file.dcimg>
 
     @property
     def xsize(self):
-        return self._sess_header['xsize'][0]
+        return int(self._sess_header['xsize'][0])
 
     @property
     def ysize(self):
-        return self._sess_header['ysize'][0]
+        return int(self._sess_header['ysize'][0])
 
     @property
     def zsize(self):
@@ -271,11 +271,11 @@ file_name=input_file.dcimg>
 
     @property
     def bytes_per_row(self):
-        return self._sess_header['bytes_per_row'][0]
+        return int(self._sess_header['bytes_per_row'][0])
 
     @property
     def bytes_per_img(self):
-        return self._sess_header['bytes_per_img'][0]
+        return int(self._sess_header['bytes_per_img'][0])
 
     @property
     def shape(self):
@@ -290,7 +290,7 @@ file_name=input_file.dcimg>
 
     @property
     def _header_size(self):
-        return self._file_header['header_size'][0]
+        return int(self._file_header['header_size'][0])
 
     @property
     def _session_footer_offset(self):
@@ -319,18 +319,18 @@ file_name=input_file.dcimg>
 
         bd = self.byte_depth
         data_strides = None
-        data_offset = (int(self._file_header['header_size'])
-                       + int(self._sess_header['offset_to_data']))
+        data_offset = (int(self._file_header['header_size'][0])
+                       + int(self._sess_header['offset_to_data'][0]))
         frame_footer_size = None
         if self.fmt_version == self.FMT_OLD:
             if self._has_4px_data:
                 offset = self._session_footer_offset \
-                         + int(self._sess_footer2['offset_to_4px'])
+                         + int(self._sess_footer2['offset_to_4px'][0])
                 self._4px = np.ndarray(
                     (self.nfrms, 4), self.dtype, self.mm, offset)
             data_strides = (self.bytes_per_img, self.bytes_per_row, bd)
         elif self.fmt_version == self.FMT_NEW:
-            frame_footer_size = self._sess_header['frame_footer_size'][0]
+            frame_footer_size = int(self._sess_header['frame_footer_size'][0])
             strides = (self.bytes_per_img + frame_footer_size, bd)
             if self._has_4px_data:
                 self._4px = np.ndarray((self.nfrms, 8 // self.byte_depth), self.dtype, self.mm,
@@ -356,9 +356,9 @@ file_name=input_file.dcimg>
                 (self.nfrms, 2), np.uint32, self.mm, offset)
         elif self.fmt_version == DCIMGFile.FMT_NEW:
             # framestamps
-            offset = int(self._file_header['header_size']
-                         + self._sess_header['offset_to_data'][0]
-                         + self.bytes_per_img)
+            offset = (self._header_size
+                      + int(self._sess_header['offset_to_data'][0])
+                      + self.bytes_per_img)
             strides = self.bytes_per_img + frame_footer_size
             self._fs_data = np.ndarray(
                 self.nfrms, np.uint32, self.mm, offset, strides)
@@ -375,7 +375,7 @@ file_name=input_file.dcimg>
         if self.fmt_version == DCIMGFile.FMT_OLD:
             if self._has_4px_data:
                 self._target_line = (
-                    int(self._sess_footer2['4px_offset_in_frame'])
+                    int(self._sess_footer2['4px_offset_in_frame'][0])
                     // self.bytes_per_row)
             else:
                 self._target_line = -1
@@ -410,8 +410,8 @@ file_name=input_file.dcimg>
             i = self._header_size + 712
             crop_info = np.ndarray((1,), self.NEW_CROP_INFO, self.mm, i)
 
-            self.x0 = crop_info['x0']
-            self.y0 = crop_info['y0']
+            self.x0 = int(crop_info['x0'][0])
+            self.y0 = int(crop_info['y0'][0])
             binning_x = crop_info['xsize'][0] // self.xsize
             binning_y = crop_info['ysize'][0] // self.ysize
 
@@ -437,7 +437,7 @@ file_name=input_file.dcimg>
                                        self._session_footer_offset)
 
         offset = (self._session_footer_offset
-                  + int(self._sess_footer['offset_to_2nd_struct']))
+                  + int(self._sess_footer['offset_to_2nd_struct'][0]))
 
         self._sess_footer2 = \
             np.ndarray((1,), self.SESSION_FOOTER2_DTYPE, self.mm, offset)
@@ -459,8 +459,8 @@ file_name=input_file.dcimg>
         # maybe this is sufficient
         # return int(self._sess_footer2['4px_size']) > 0
 
-        footer_size = int(self._sess_footer['footer_size'])
-        offset_to_4px = int(self._sess_footer2['offset_to_4px'])
+        footer_size = int(self._sess_footer['footer_size'][0])
+        offset_to_4px = int(self._sess_footer2['offset_to_4px'][0])
 
         return footer_size == offset_to_4px + 8 * self.nfrms
 

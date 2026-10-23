@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 from ddt import ddt, data
 
@@ -169,6 +171,78 @@ class TestDCIMGFILE(unittest.TestCase):
         self.assertEqual(slice(10, 42, 5), DCIMGFile._args_to_slice(10, 42, 5))
 
         self.assertEqual(slice(42), DCIMGFile._args_to_slice(None, 42, None))
+
+
+def _write_dcimg(path, frames, fmt):
+    """Write a minimal DCIMG file holding `frames` (nfrms, ysize, xsize)."""
+    nfrms, ysize, xsize = frames.shape
+    header_size = 232
+    offset_to_data = 1024
+    bytes_per_img = ysize * xsize * 2
+    fh = np.zeros(1, DCIMGFile.FILE_HDR_DTYPE)
+    fh['file_format'] = b'DCIMG'
+    fh['nsess'] = 1
+    fh['nfrms'] = nfrms
+    fh['header_size'] = header_size
+    if fmt == DCIMGFile.FMT_OLD:
+        fh['format_version'] = 0x7
+        sh = np.zeros(1, DCIMGFile.SESS_HDR_DTYPE)
+        sh['session_data_size'] = offset_to_data + bytes_per_img * nfrms
+        frame_footer = 0
+    else:
+        fh['format_version'] = 0x1000000
+        sh = np.zeros(1, DCIMGFile.NEW_SESSION_HEADER_DTYPE)
+        frame_footer = 16
+        sh['frame_footer_size'] = frame_footer
+    sh['nfrms'] = nfrms
+    sh['byte_depth'] = 2
+    sh['xsize'] = xsize
+    sh['ysize'] = ysize
+    sh['bytes_per_row'] = xsize * 2
+    sh['bytes_per_img'] = bytes_per_img
+    sh['offset_to_data'] = offset_to_data
+
+    data_start = header_size + offset_to_data
+    data_end = data_start + (bytes_per_img + frame_footer) * nfrms
+    buf = bytearray(data_end + 4096)
+    buf[:fh.nbytes] = fh.tobytes()
+    buf[header_size:header_size + sh.nbytes] = sh.tobytes()
+    if fmt == DCIMGFile.FMT_NEW:
+        crop = np.zeros(1, DCIMGFile.NEW_CROP_INFO)
+        crop['xsize'] = xsize
+        crop['ysize'] = ysize
+        i = header_size + 712
+        buf[i:i + crop.nbytes] = crop.tobytes()
+    else:
+        footer = np.zeros(1, DCIMGFile.SESSION_FOOTER_DTYPE)
+        footer['offset_to_2nd_struct'] = footer.nbytes
+        footer2 = np.zeros(1, DCIMGFile.SESSION_FOOTER2_DTYPE)
+        buf[data_end:data_end + footer.nbytes] = footer.tobytes()
+        i = data_end + footer.nbytes
+        buf[i:i + footer2.nbytes] = footer2.tobytes()
+    for z in range(nfrms):
+        i = data_start + z * (bytes_per_img + frame_footer)
+        buf[i:i + bytes_per_img] = frames[z].astype('<u2').tobytes()
+    with open(path, 'wb') as fp:
+        fp.write(buf)
+
+
+class TestDCIMGFileOnDisk(unittest.TestCase):
+
+    def testOpenAndIndex(self):
+        frames = np.arange(3 * 6 * 16, dtype=np.uint16).reshape((3, 6, 16))
+        for fmt in (DCIMGFile.FMT_OLD, DCIMGFile.FMT_NEW):
+            with tempfile.TemporaryDirectory() as d:
+                path = os.path.join(d, 'test.dcimg')
+                _write_dcimg(path, frames, fmt)
+                f = DCIMGFile(path)
+                self.assertEqual(f.shape, frames.shape)
+                self.assertFalse(f._has_4px_data)
+                self.assertTrue(np.array_equal(f.whole(), frames))
+                self.assertTrue(np.array_equal(f[-1], frames[-1]))
+                self.assertTrue(np.array_equal(f[..., -5:], frames[..., -5:]))
+                self.assertTrue(np.array_equal(f[1, -2, ::-1], frames[1, -2, ::-1]))
+                f.close()
 
 
 if __name__ == '__main__':
