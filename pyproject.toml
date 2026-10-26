@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dcimg"
+description = "Python module to read Hamamatsu DCIMG files"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Giacomo Mazzamuto", email = "mazzamuto@lens.unifi.it" },
+]
+keywords = ["dcimg", "image", "files", "hamamatsu"]
+requires-python = ">=3.8"
+dynamic = ["version"]
+dependencies = ["numpy"]
+
+# See https://pypi.python.org/pypi?%3Aaction=list_classifiers
+classifiers = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    'Development Status :: 3 - Alpha',
+
+    # Indicate who your project is intended for
+    'Intended Audience :: Developers',
+    'Topic :: Scientific/Engineering',
+
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+]
+
+[project.optional-dependencies]
+# Install these using, for example:
+# $ pip install -e .[dev,test]
+dev = [
+    "pip-tools",
+]
+test = [
+    "ddt",
+]
+doc = [
+    "numpydoc",
+    "sphinx",
+    "sphinx_rtd_theme",
+]
+
+[project.urls]
+Homepage = "https://github.com/lens-biophotonics/dcimg"
+
+[tool.setuptools]
+py-modules = ["dcimg"]
+
+[tool.setuptools.dynamic]
+version = { attr = "dcimg.__version__" }

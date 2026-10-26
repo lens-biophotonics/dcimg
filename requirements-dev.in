@@ -1,6 +1,6 @@
+build
 ddt
 numpydoc
 pip-tools
 sphinx
 sphinx_rtd_theme
-wheel
