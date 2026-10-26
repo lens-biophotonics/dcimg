@@ -594,7 +594,7 @@ file_name=input_file.dcimg>
         return myslice
 
     def zslice(self, arg1, arg2=None, step=None, dtype=None, copy=True):
-        """Return a slice along `Z`, i.e.\  a substack of frames.
+        """Return a slice along `Z`, i.e. a substack of frames.
 
         Parameters
         ----------
@@ -629,7 +629,7 @@ file_name=input_file.dcimg>
         return a
 
     def zslice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
-        """Return a slice, i.e.\  a substack of frames, by index.
+        """Return a slice, i.e. a substack of frames, by index.
 
         Parameters
         ----------
